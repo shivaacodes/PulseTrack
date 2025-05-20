@@ -1,5 +1,5 @@
 import React from 'react';
-import { SidebarProvider, SidebarInset, SidebarRail } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset, SidebarRail, SidebarTrigger } from '@/components/ui/sidebar';
 import DashboardSidebar from './Sidebar';
 import ThemeSelector from './ThemeSelector';
 import SalesChart from './SalesChart';
@@ -22,14 +22,16 @@ export default function Dashboard() {
       <div className="flex min-h-screen w-full bg-white">
         <DashboardSidebar />
         <SidebarInset>
-          <div className="p-6 w-full">
-            <header className="flex justify-between items-center mb-8">
-              <div>
+          <header className="sticky top-0 z-50 bg-white border-b border-gray-200 px-6 py-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="hover:bg-gray-100 rounded-lg" />
                 <h1 className="text-4xl font-bold">Analytics Dashboard</h1>
               </div>
               <ThemeSelector />
-            </header>
-            
+            </div>
+          </header>
+          <div className="p-6 w-full">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <StatCard 
                 title="Active Users" 

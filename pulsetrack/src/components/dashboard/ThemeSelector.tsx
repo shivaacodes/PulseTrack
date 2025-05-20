@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Palette } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
 
 type ThemeColor = 'green' | 'red' | 'yellow' | 'blue' | 'orange';
 
@@ -12,11 +11,6 @@ export default function ThemeSelector() {
     setCurrentTheme(theme);
     // Dispatch theme change event
     window.dispatchEvent(new CustomEvent('themeChange', { detail: theme }));
-    toast({
-      title: "Theme Changed",
-      description: `Theme switched to ${theme}`,
-      duration: 2000,
-    });
   };
 
   const getThemeColor = (theme: ThemeColor) => {
