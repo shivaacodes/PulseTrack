@@ -31,7 +31,7 @@ const NotFound = () => {
           The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
         <Button asChild className="min-w-[200px]">
-          <Link href="/dashboard">Return to Home</Link>
+          <Link href="/">Return to Home</Link>
         </Button>
       </div>
     </div>

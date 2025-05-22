@@ -7,246 +7,226 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Lock, User } from "lucide-react";
-import { toast, Toaster } from "sonner";
+import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 const AuthForm = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const { toast } = useToast();
+  const { login, register } = useAuth();
+  const router = useRouter();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Login successful!", {
-        description: "Welcome back to your dashboard.",
+    try {
+      const formData = new FormData(e.target as HTMLFormElement);
+      const email = formData.get('email') as string;
+      const password = formData.get('password') as string;
+
+      if (!email || !password) {
+        throw new Error('Email and password are required');
+      }
+
+      const response = await login(email, password);
+      
+      if (response && response.user_id) {
+        toast({
+          title: "Login successful!",
+          description: "Welcome back to your dashboard.",
+        });
+        
+        // Use replace instead of push to prevent back navigation to login
+        router.replace(`/dashboard?user_id=${response.user_id}`);
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "An error occurred during login",
       });
-    }, 1500);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success("Account created!", {
-        description: "Please check your email to verify your account.",
+    try {
+      const formData = new FormData(e.target as HTMLFormElement);
+      const email = formData.get('email') as string;
+      const password = formData.get('password') as string;
+      const fullName = formData.get('fullName') as string;
+
+      // Validate required fields
+      if (!email || !password || !fullName) {
+        throw new Error('All fields are required');
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error('Invalid email format');
+      }
+
+      // Validate password length
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+
+      await register(email, password, fullName);
+      toast({
+        title: "Account created successfully!",
+        description: "You can now log in with your credentials.",
       });
-    }, 1500);
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: error instanceof Error ? error.message : "An error occurred during registration",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <>
-      <Toaster />
-      <Card className="w-full max-w-md bg-card backdrop-blur-sm border border-border/20 shadow-xl">
+      <Card className="w-full max-w-md bg-card/50 backdrop-blur-md border border-border/20 shadow-xl">
         <Tabs defaultValue="login" className="w-full">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-2xl font-semibold text-primary">
+          <CardHeader className="space-y-4 pb-8">
+            <div className="flex flex-col items-center space-y-4">
+              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 Analytics Pro
               </CardTitle>
-              <TabsList className="grid grid-cols-2 w-[200px]">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsList className="grid grid-cols-2 w-[240px] bg-muted/50">
+                <TabsTrigger value="login" className="data-[state=active]:bg-background">Login</TabsTrigger>
+                <TabsTrigger value="signup" className="data-[state=active]:bg-background">Sign Up</TabsTrigger>
               </TabsList>
             </div>
-            <CardDescription className="text-muted-foreground">
+            <CardDescription className="text-center text-muted-foreground/80">
               Access your dashboard analytics in one place
             </CardDescription>
           </CardHeader>
 
-          <CardContent>
-            <TabsContent value="login">
+          <CardContent className="space-y-6">
+            <TabsContent value="login" className="space-y-6">
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                <div className="space-y-4">
+                  <div className="relative group">
+                    <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
                     <Input
                       placeholder="Email"
                       type="email"
-                      className="pl-10"
+                      name="email"
+                      className="pl-10 h-11 bg-background/50 focus:bg-background transition-colors"
                       required
                     />
                   </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                  <div className="relative group">
+                    <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
                     <Input
                       placeholder="Password"
-                      type="password"
-                      className="pl-10"
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      className="pl-10 pr-10 h-11 bg-background/50 focus:bg-background transition-colors"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3 text-muted-foreground/70 hover:text-foreground transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
                   </div>
-                </div>
-
-                <div className="text-sm text-right">
-                  <a href="#" className="text-primary hover:underline">
-                    Forgot password?
-                  </a>
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full relative overflow-hidden transition-all duration-300 hover:shadow-md"
+                  className="w-full h-11 bg-primary hover:bg-primary/90 transition-all duration-300"
                   disabled={isLoading}
                 >
                   {isLoading ? "Logging in..." : "Login"}
                 </Button>
-
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-muted"></div>
-                  </div>
-                  <div className="relative flex justify-center text-xs">
-                    <span className="bg-card px-2 text-muted-foreground">
-                      or continue with
-                    </span>
-                  </div>
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
-                    <path
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  Google
-                </Button>
               </form>
             </TabsContent>
 
-            <TabsContent value="signup">
+            <TabsContent value="signup" className="space-y-6">
               <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                <div className="space-y-4">
+                  <div className="relative group">
+                    <User className="absolute left-3 top-3 h-5 w-5 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
                     <Input
                       placeholder="Full Name"
                       type="text"
-                      className="pl-10"
+                      name="fullName"
+                      className="pl-10 h-11 bg-background/50 focus:bg-background transition-colors"
                       required
                     />
                   </div>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                  <div className="relative group">
+                    <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
                     <Input
                       placeholder="Email"
                       type="email"
-                      className="pl-10"
+                      name="email"
+                      className="pl-10 h-11 bg-background/50 focus:bg-background transition-colors"
                       required
                     />
                   </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                  <div className="relative group">
+                    <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
                     <Input
                       placeholder="Password"
-                      type="password"
-                      className="pl-10"
+                      type={showSignupPassword ? "text" : "password"}
+                      name="password"
+                      className="pl-10 pr-10 h-11 bg-background/50 focus:bg-background transition-colors"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowSignupPassword(!showSignupPassword)}
+                      className="absolute right-3 top-3 text-muted-foreground/70 hover:text-foreground transition-colors"
+                    >
+                      {showSignupPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
                   </div>
-                </div>
-
-                <div className="text-xs">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      className="rounded text-primary"
-                      required
-                    />
-                    <span>
-                      I agree to the{" "}
-                      <a href="#" className="text-primary hover:underline">
-                        Terms of Service
-                      </a>{" "}
-                      and{" "}
-                      <a href="#" className="text-primary hover:underline">
-                        Privacy Policy
-                      </a>
-                    </span>
-                  </label>
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full relative overflow-hidden transition-all duration-300 hover:shadow-md"
+                  className="w-full h-11 bg-primary hover:bg-primary/90 transition-all duration-300"
                   disabled={isLoading}
                 >
                   {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
-
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-muted"></div>
-                  </div>
-                  <div className="relative flex justify-center text-xs">
-                    <span className="bg-card px-2 text-muted-foreground">
-                      or continue with
-                    </span>
-                  </div>
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  disabled={isLoading}
-                >
-                  <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
-                    <path
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  Google
-                </Button>
               </form>
             </TabsContent>
           </CardContent>
-
-          <CardFooter className="flex flex-col space-y-2">
-            <div className="text-xs text-center text-muted-foreground">
-              By continuing, you agree to Analytics Pro`&apos;`s Terms of
-              Service and Privacy Policy.
-            </div>
-          </CardFooter>
         </Tabs>
       </Card>
     </>

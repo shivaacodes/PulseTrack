@@ -1,4 +1,3 @@
-# backend/src/api/v1/events.py
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from src.db.database import get_db

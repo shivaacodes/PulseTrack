@@ -12,15 +12,16 @@ import {
   Users,
   MousePointerClick,
   UserCheck,
-  Settings,
-  Activity
+  Activity,
+  ArrowDownToLine,
+  Target
 } from "lucide-react";
 import Image from 'next/image';
 
 export default function DashboardSidebar() {
   const menuItems = [
     { 
-      name: 'Dashboard', 
+      name: 'Analytics', 
       icon: <Activity className="h-7 w-7" />,
       path: '/',
       active: true
@@ -36,14 +37,19 @@ export default function DashboardSidebar() {
       path: '/click-tracking'
     },
     { 
+      name: 'Bounce Rate', 
+      icon: <ArrowDownToLine className="h-7 w-7" />,
+      path: '/bounce-rate'
+    },
+    { 
+      name: 'Conversion', 
+      icon: <Target className="h-7 w-7" />,
+      path: '/conversion-rate'
+    },
+    { 
       name: 'Retention', 
       icon: <UserCheck className="h-7 w-7" />,
       path: '/use-retention'
-    },
-    { 
-      name: 'Settings', 
-      icon: <Settings className="h-7 w-7" />,
-      path: '/settings'
     }
   ];
 

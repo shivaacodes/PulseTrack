@@ -1,5 +1,7 @@
 from fastapi import APIRouter
-from src.api.v1 import events
+from .v1 import analytics, auth
 
 api_router = APIRouter()
-api_router.include_router(events.router, prefix="/v1")
+
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])

@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import ThemeToggle from "./ThemeToggle";
+import Image from "next/image";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -26,19 +26,24 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
       </div>
 
       {/* Top navigation */}
-      <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <div className="h-6 w-6 rounded-md bg-primary animate-pulse-glow"></div>
-          <span className="font-semibold text-lg text-primary">PulseTrack</span>
+      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center">
+        <div className="flex items-center">
+          <Image
+            src="/images/PulseTrack.png"
+            alt="PulseTrack Logo"
+            width={320}
+            height={85}
+            className="h-16 w-auto"
+            priority
+          />
         </div>
-        <ThemeToggle />
       </div>
 
       {/* Main content */}
       <div className="relative z-10 w-full max-w-lg">{children}</div>
 
       {/* Footer */}
-      <div className="absolute bottom-4 left-0 right-0 text-center text-xs text-muted-foreground">
+      <div className="absolute bottom-2 left-0 right-0 text-center text-xs text-muted-foreground">
         © 2025 Analytics Pro. All rights reserved.
       </div>
     </div>

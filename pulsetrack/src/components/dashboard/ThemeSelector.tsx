@@ -38,35 +38,35 @@ export default function ThemeSelector() {
       </div>
       <div className="flex gap-3">
         <Button
-          className={`theme-button w-10 h-10 p-0 ${currentTheme === 'green' ? 'ring-2 ring-offset-2 ring-green-500' : ''}`}
+          className={`theme-button w-10 h-10 p-0 hover:bg-gray-100 ${currentTheme === 'green' ? 'bg-gray-100' : ''}`}
           variant="outline"
           onClick={() => handleThemeChange('green')}
         >
           <div className="w-6 h-6 rounded-full bg-green-500" />
         </Button>
         <Button 
-          className={`theme-button w-10 h-10 p-0 ${currentTheme === 'red' ? 'ring-2 ring-offset-2 ring-red-500' : ''}`}
+          className={`theme-button w-10 h-10 p-0 hover:bg-gray-100 ${currentTheme === 'red' ? 'bg-gray-100' : ''}`}
           variant="outline"
           onClick={() => handleThemeChange('red')}
         >
           <div className="w-6 h-6 rounded-full bg-red-500" />
         </Button>
         <Button
-          className={`theme-button w-10 h-10 p-0 ${currentTheme === 'orange' ? 'ring-2 ring-offset-2 ring-orange-500' : ''}`}
+          className={`theme-button w-10 h-10 p-0 hover:bg-gray-100 ${currentTheme === 'orange' ? 'bg-gray-100' : ''}`}
           variant="outline"
           onClick={() => handleThemeChange('orange')}
         >
           <div className="w-6 h-6 rounded-full bg-orange-500" />
         </Button>
         <Button
-          className={`theme-button w-10 h-10 p-0 ${currentTheme === 'blue' ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`}
+          className={`theme-button w-10 h-10 p-0 hover:bg-gray-100 ${currentTheme === 'blue' ? 'bg-gray-100' : ''}`}
           variant="outline"
           onClick={() => handleThemeChange('blue')}
         >
           <div className="w-6 h-6 rounded-full bg-blue-500" />
         </Button>
         <Button
-          className={`theme-button w-10 h-10 p-0 ${currentTheme === 'yellow' ? 'ring-2 ring-offset-2 ring-yellow-400' : ''}`}
+          className={`theme-button w-10 h-10 p-0 hover:bg-gray-100 ${currentTheme === 'yellow' ? 'bg-gray-100' : ''}`}
           variant="outline"
           onClick={() => handleThemeChange('yellow')}
         >

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider as NextThemeProvider } from "next-themes";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -37,15 +39,17 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} antialiased bg-white text-black min-h-screen`}
       >
-        <ThemeProvider
+        <NextThemeProvider
           attribute="class"
           defaultTheme="light"
           forcedTheme="light"
           enableSystem={false}
           disableTransitionOnChange
         >
-          {children}
-        </ThemeProvider>
+          <ThemeProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </ThemeProvider>
+        </NextThemeProvider>
       </body>
     </html>
   );
