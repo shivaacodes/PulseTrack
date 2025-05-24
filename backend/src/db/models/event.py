@@ -1,12 +1,22 @@
-from sqlalchemy import Column, Integer, String, JSON, DateTime, ForeignKey
-from sqlalchemy.sql import func
-from src.db.database import Base
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
+from sqlalchemy.orm import relationship
+from datetime import datetime
+from src.database import Base
 
 class Event(Base):
+    """Event model for tracking user interactions."""
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True, index=True)
-    site_id = Column(String, ForeignKey("sites.id"), nullable=False)
-    type = Column(String, nullable=False)  # page_view, click, page_unload, etc.
-    data = Column(JSON, nullable=False)  # Additional event data
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    session_id = Column(Integer, ForeignKey("sessions.id"))
+    site_id = Column(Integer, ForeignKey("sites.id"))
+    name = Column(String(255))
+    properties = Column(JSON)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    session = relationship("Session", back_populates="events")
+    site = relationship("Site", back_populates="events")
+
+    def __repr__(self):
+        return f"<Event {self.name}>" 

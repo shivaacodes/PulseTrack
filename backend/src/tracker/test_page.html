@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseTrack Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .form-container {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>PulseTrack Test Page</h1>
+    <p>This page is used to test the PulseTrack analytics tracker.</p>
+
+    <div class="button-container">
+        <button id="testButton1">Test Button 1</button>
+        <button id="testButton2">Test Button 2</button>
+        <button id="testButton3">Test Button 3</button>
+    </div>
+
+    <div class="form-container">
+        <h2>Test Form</h2>
+        <form id="testForm">
+            <input type="text" placeholder="Name" id="nameInput">
+            <input type="email" placeholder="Email" id="emailInput">
+            <button type="submit">Submit Form</button>
+        </form>
+    </div>
+
+    <div class="product-card">
+        <h3>Test Product</h3>
+        <p>This is a test product card to track product views and interactions.</p>
+        <button class="viewDetails">View Details</button>
+    </div>
+
+    <div class="product-card">
+        <h3>Another Product</h3>
+        <p>Another test product to demonstrate multiple product tracking.</p>
+        <button class="viewDetails">View Details</button>
+    </div>
+
+    <!-- PulseTrack Tracker Script -->
+    <script src="/static/tracker.js" data-site-id="7"></script>
+
+    <!-- Test Script -->
+    <script>
+        // Test button clicks
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                console.log('Button clicked:', e.target.textContent);
+            });
+        });
+
+        // Test form submission
+        document.getElementById('testForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log('Form submitted');
+        });
+
+        // Test product view details
+        document.querySelectorAll('.viewDetails').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const productName = e.target.closest('.product-card').querySelector('h3').textContent;
+                console.log('Viewing details for:', productName);
+            });
+        });
+
+        // Simulate user session
+        let sessionStart = new Date();
+        window.addEventListener('beforeunload', () => {
+            let sessionDuration = new Date() - sessionStart;
+            console.log('Session duration:', sessionDuration / 1000, 'seconds');
+        });
+    </script>
+</body>
+</html> 

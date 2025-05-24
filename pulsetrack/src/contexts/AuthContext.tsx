@@ -22,8 +22,10 @@ interface User {
 
 interface AuthResponse {
   access_token: string;
+  refresh_token: string;
   token_type: string;
   user_id: number;
+  redirect_url: string;
 }
 
 interface AuthContextType {
@@ -61,7 +63,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const fetchUser = async (token: string) => {
     try {
-      const response = await api.get<User>("/api/auth/me", {
+      const response = await api.get<User>("/api/v1/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(response.data);
@@ -74,20 +76,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = async (email: string, password: string): Promise<AuthResponse> => {
     try {
-      const formData = new FormData();
-      formData.append("username", email);
+      const formData = new URLSearchParams();
+      formData.append("email", email);
       formData.append("password", password);
 
-      const response = await api.post<AuthResponse>("/api/auth/login", formData, {
+      const response = await api.post<AuthResponse>("/api/v1/auth/login", formData.toString(), {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
       });
 
-      const { access_token, user_id } = response.data;
+      const { access_token, refresh_token, user_id } = response.data;
       
-      // Store token and update auth state
+      // Store tokens and update auth state
       localStorage.setItem("token", access_token);
+      localStorage.setItem("refreshToken", refresh_token);
       await fetchUser(access_token);
 
       return response.data;
@@ -106,7 +109,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const register = async (email: string, password: string, fullName: string): Promise<User> => {
     try {
-      const response = await api.post<User>("/api/auth/register", {
+      const response = await api.post<User>("/api/v1/auth/register", {
         email,
         password,
         full_name: fullName,
@@ -126,6 +129,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     setUser(null);
     setIsAuthenticated(false);
   };

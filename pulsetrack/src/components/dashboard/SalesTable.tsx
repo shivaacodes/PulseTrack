@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -8,8 +9,76 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { analyticsApi, PagePerformance } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
-const data = [
+export default function SalesTable() {
+  const [data, setData] = useState<PagePerformance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const pageData = await analyticsApi.getPagePerformance(user?.id || 1);
+        setData(pageData);
+      } catch (err) {
+        console.error('Error fetching page performance:', err);
+        setError('Failed to load page performance data');
+        // Fallback to default data if API fails
+        setData(defaultPageData);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user?.id]);
+
+  if (loading) {
+    return (
+      <div className="h-[calc(100vh-240px)] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-[calc(100vh-240px)] flex items-center justify-center text-red-600">
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-[calc(100vh-240px)]">
+      <h3 className="text-base font-semibold mb-4 text-red-600">Page Performance</h3>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[140px]">Page</TableHead>
+            <TableHead className="text-right">Visitors</TableHead>
+            <TableHead className="text-right">Bounce</TableHead>
+            <TableHead className="text-right">Conv.</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.slice(0, 9).map((row) => (
+            <TableRow key={row.id} className="h-14">
+              <TableCell className="font-medium">{row.page}</TableCell>
+              <TableCell className="text-right tabular-nums">{(row.visitors || 0).toLocaleString()}</TableCell>
+              <TableCell className="text-right tabular-nums">{row.bounceRate}</TableCell>
+              <TableCell className="text-right tabular-nums">{row.conversion}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}// Default data to show while loading or if API fails
+const defaultPageData: PagePerformance[] = [
   {
     id: 1,
     page: 'Homepage',
@@ -51,61 +120,6 @@ const data = [
     visitors: 4200,
     bounceRate: '38%',
     conversion: '2.8%'
-  },
-  {
-    id: 7,
-    page: 'About Us',
-    visitors: 2800,
-    bounceRate: '42%',
-    conversion: '1.5%'
-  },
-  {
-    id: 8,
-    page: 'Contact',
-    visitors: 1500,
-    bounceRate: '35%',
-    conversion: '2.1%'
-  },
-  {
-    id: 9,
-    page: 'FAQ',
-    visitors: 3200,
-    bounceRate: '25%',
-    conversion: '1.8%'
-  },
-  {
-    id: 10,
-    page: 'Support',
-    visitors: 2100,
-    bounceRate: '30%',
-    conversion: '2.3%'
   }
-];
+]; 
 
-export default function SalesTable() {
-  return (
-    <div className="h-[calc(100vh-240px)]">
-      <h3 className="text-base font-semibold mb-4 text-red-600">Page Performance</h3>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[140px]">Page</TableHead>
-            <TableHead className="text-right">Visitors</TableHead>
-            <TableHead className="text-right">Bounce</TableHead>
-            <TableHead className="text-right">Conv.</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((row) => (
-            <TableRow key={row.id} className="h-14">
-              <TableCell className="font-medium">{row.page}</TableCell>
-              <TableCell className="text-right tabular-nums">{row.visitors.toLocaleString()}</TableCell>
-              <TableCell className="text-right tabular-nums">{row.bounceRate}</TableCell>
-              <TableCell className="text-right tabular-nums">{row.conversion}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-} 

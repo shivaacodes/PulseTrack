@@ -1,36 +1,56 @@
 'use client';
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useTheme } from '@/contexts/ThemeContext';
+import React, { useEffect, useState } from 'react';
+import { Card, Typography, CircularProgress } from '@mui/material';
+import { Bar } from 'react-chartjs-2';
 
-const data = [
-  { name: 'Home', rate: 2.5 },
-  { name: 'Products', rate: 4.2 },
-  { name: 'About', rate: 1.8 },
-  { name: 'Contact', rate: 3.1 },
-  { name: 'Blog', rate: 2.9 },
-];
+const ConversionChart: React.FC = () => {
+  const [data, setData] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export default function ConversionChart() {
-  const { currentTheme, getThemeColor } = useTheme();
-  const themeColor = getThemeColor(currentTheme);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/analytics/overview?site_id=1&days=30');
+        if (!response.ok) throw new Error('Failed to fetch analytics');
+        const analyticsData = await response.json();
+        setData(analyticsData.conversion_rate);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return <CircularProgress />;
+  if (error) return <Typography color="error">{error}</Typography>;
+  if (!data) return null;
+
+  const chartData = {
+    labels: ['Conversion Rate'],
+    datasets: [
+      {
+        label: 'Conversion Rate (%)',
+        data: [data],
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
 
   return (
-    <div className="h-[500px]">
-      <h3 className="text-base font-semibold mb-4 text-red-600">Conversion Rate by Page</h3>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Bar 
-            dataKey="rate" 
-            fill={themeColor}
-            radius={[4, 4, 0, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+    <Card sx={{ p: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        Conversion Rate
+      </Typography>
+      <Bar data={chartData} />
+    </Card>
   );
-} 
+};
+
+export default ConversionChart; 

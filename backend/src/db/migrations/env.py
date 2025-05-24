@@ -2,6 +2,8 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
+from src.database import Base
+from src.db.models import user, site, session
 import os
 import sys
 
@@ -9,7 +11,6 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # Import all models here
-from src.db.database import Base
 from src.db.models.user import User
 from src.db.models.site import Site
 from src.db.models.event import Event

@@ -46,7 +46,7 @@ const AuthForm = () => {
         });
         
         // Use replace instead of push to prevent back navigation to login
-        router.replace(`/dashboard?user_id=${response.user_id}`);
+        router.replace(response.redirect_url || `/dashboard?user_id=${response.user_id}`);
       } else {
         throw new Error('Invalid response from server');
       }
@@ -124,7 +124,7 @@ const AuthForm = () => {
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-6">
+          <CardContent>
             <TabsContent value="login" className="space-y-6">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-4">

@@ -1,46 +1,56 @@
 'use client';
 
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
-import { useTheme } from '@/contexts/ThemeContext';
+import React, { useEffect, useState } from 'react';
+import { Card, Typography, CircularProgress } from '@mui/material';
+import { Bar } from 'react-chartjs-2';
 
-const data = [
-  { day: 'Day 1', rate: 100 },
-  { day: 'Day 2', rate: 75 },
-  { day: 'Day 3', rate: 60 },
-  { day: 'Day 4', rate: 45 },
-  { day: 'Day 5', rate: 35 },
-  { day: 'Day 6', rate: 30 },
-  { day: 'Day 7', rate: 25 },
-];
+const RetentionChart: React.FC = () => {
+  const [data, setData] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const getColorClass = (value: number) => {
-  if (value >= 80) return 'fill-green-500';
-  if (value >= 60) return 'fill-blue-500';
-  if (value >= 40) return 'fill-yellow-500';
-  if (value >= 20) return 'fill-orange-500';
-  return 'fill-red-500';
-};
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/analytics/overview?site_id=1&days=30');
+        if (!response.ok) throw new Error('Failed to fetch analytics');
+        const analyticsData = await response.json();
+        setData(analyticsData.retention_rate);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-export default function RetentionChart() {
-  const { currentTheme, getThemeColor } = useTheme();
-  const themeColor = getThemeColor(currentTheme);
+    fetchData();
+  }, []);
+
+  if (loading) return <CircularProgress />;
+  if (error) return <Typography color="error">{error}</Typography>;
+  if (!data) return null;
+
+  const chartData = {
+    labels: ['Retention Rate'],
+    datasets: [
+      {
+        label: 'Retention Rate (%)',
+        data: [data],
+        backgroundColor: 'rgba(255, 206, 86, 0.6)',
+        borderColor: 'rgba(255, 206, 86, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
 
   return (
-    <div className="h-[500px]">
-      <h3 className="text-base font-semibold mb-4 text-red-600">User Retention</h3>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="day" />
-          <YAxis />
-          <Tooltip />
-          <Bar 
-            dataKey="rate" 
-            fill={themeColor}
-            radius={[4, 4, 0, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
+    <Card sx={{ p: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        Retention Rate
+      </Typography>
+      <Bar data={chartData} />
+    </Card>
   );
-} 
+};
+
+export default RetentionChart; 
