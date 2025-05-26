@@ -18,8 +18,8 @@ from .schemas import (
     EventCreate,
     EventResponse,
     AnalyticsFilter,
-    PageViewCreate
 )
+
 
 class AnalyticsService:
     """
@@ -30,11 +30,30 @@ class AnalyticsService:
     def __init__(self, db: Session):
         """
         Initialize the analytics service with a database session.
-        
+
         Args:
             db (Session): SQLAlchemy database session
         """
         self.db = db
+        self._ensure_default_user()
+
+    def _ensure_default_user(self):
+        """Ensure a default user exists in the database."""
+        from ..db.models.user import User
+        from ..core.security import get_password_hash
+
+        default_user = self.db.query(User).filter(User.id == 1).first()
+        if not default_user:
+            default_user = User(
+                id=1,
+                email="admin@localhost",
+                hashed_password=get_password_hash("admin"),
+                full_name="Admin User",
+                is_active=True
+            )
+            self.db.add(default_user)
+            self.db.commit()
+            self.db.refresh(default_user)
 
     def create_pageview(self, site_id: int, properties: Dict[str, Any] = None) -> PageView:
         """Create a new page view record."""
@@ -50,10 +69,24 @@ class AnalyticsService:
 
     def create_event(self, event: EventCreate) -> EventResponse:
         """Create a new analytics event."""
+        # Check if site exists, create if it doesn't
+        site = self.db.query(Site).filter(Site.id == event.site_id).first()
+        if not site:
+            # Create a default site if it doesn't exist
+            site = Site(
+                id=event.site_id,
+                name=f"Site {event.site_id}",
+                domain="localhost",
+                user_id=1  # Default user ID
+            )
+            self.db.add(site)
+            self.db.commit()
+            self.db.refresh(site)
+
         # If it's a pageview event, create a page view record
         if event.name == "pageview":
             self.create_pageview(event.site_id, event.properties)
-            
+
         # Create event
         db_event = Event(
             site_id=event.site_id,
@@ -84,7 +117,7 @@ class AnalyticsService:
     def get_event_counts(self, site_id: int, days: int = 30) -> Dict[str, int]:
         """Get event counts by type for a specific site."""
         start_date = datetime.utcnow() - timedelta(days=days)
-        
+
         events = self.db.query(
             Event.name,
             func.count(Event.id).label('count')
@@ -99,7 +132,7 @@ class AnalyticsService:
         """Get comprehensive analytics overview."""
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
-        
+
         # Get total pageviews
         total_pageviews = self.db.query(func.count(PageView.id)).filter(
             PageView.site_id == site_id,
@@ -124,7 +157,8 @@ class AnalyticsService:
         # Get average session duration
         avg_duration = self.db.query(
             func.avg(
-                func.extract('epoch', DBSession.ended_at - DBSession.started_at)
+                func.extract('epoch', DBSession.ended_at -
+                             DBSession.started_at)
             )
         ).filter(
             DBSession.site_id == site_id,
@@ -146,11 +180,11 @@ class AnalyticsService:
     def get_page_performance(self, site_id: str, days: int = 30) -> List[dict]:
         """
         Get page performance metrics over time.
-        
+
         Args:
             site_id (str): ID of the site
             days (int): Number of days to look back
-            
+
         Returns:
             List[dict]: List of daily page performance metrics with format:
             {
@@ -162,21 +196,21 @@ class AnalyticsService:
         """
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
-        
+
         # Get page views and clicks for each day
         page_views = self.db.query(PageView).filter(
             PageView.site_id == site_id,
             PageView.timestamp >= start_date,
             PageView.timestamp <= end_date
         ).all()
-        
+
         clicks = self.db.query(Event).filter(
             Event.site_id == site_id,
             Event.name == 'click',
             Event.timestamp >= start_date,
             Event.timestamp <= end_date
         ).all()
-        
+
         # Initialize daily metrics with default values
         daily_metrics = {}
         current_date = start_date
@@ -189,28 +223,28 @@ class AnalyticsService:
                 'bounce_rate': 0
             }
             current_date += timedelta(days=1)
-        
+
         # Update metrics with actual data
         for page_view in page_views:
             date = page_view.timestamp.date().isoformat()
             daily_metrics[date]['pageviews'] += 1
-        
+
         for click in clicks:
             date = click.timestamp.date().isoformat()
             daily_metrics[date]['clicks'] += 1
-        
+
         # Calculate bounce rate for each day
         for date in daily_metrics:
             if daily_metrics[date]['pageviews'] > 0:
                 daily_metrics[date]['bounce_rate'] = round(
-                    (daily_metrics[date]['pageviews'] - daily_metrics[date]['clicks']) / 
+                    (daily_metrics[date]['pageviews'] - daily_metrics[date]['clicks']) /
                     daily_metrics[date]['pageviews'] * 100, 2
                 )
-        
+
         # Convert to list and sort by date
         result = list(daily_metrics.values())
         result.sort(key=lambda x: x['date'])
-        
+
         return result
 
     def get_user_behavior(self, site_id: int, days: int = 30) -> Dict[str, Any]:
@@ -219,38 +253,40 @@ class AnalyticsService:
             # Calculate date range
             end_date = datetime.utcnow()
             start_date = end_date - timedelta(days=days)
-            
+
             # Get session data
             sessions = self.db.query(DBSession).filter(
                 DBSession.site_id == site_id,
                 DBSession.started_at >= start_date,
                 DBSession.started_at <= end_date
             ).all()
-            
+
             # Calculate metrics
             total_sessions = len(sessions)
             total_duration = sum(
-                (s.ended_at - s.started_at).total_seconds() 
-                for s in sessions 
+                (s.ended_at - s.started_at).total_seconds()
+                for s in sessions
                 if s.ended_at is not None
             )
             avg_duration = total_duration / total_sessions if total_sessions > 0 else 0
-            
+
             # Calculate bounce rate from session metadata
             bounce_sessions = sum(
-                1 for s in sessions 
+                1 for s in sessions
                 if s.session_metadata and s.session_metadata.get('bounce', False)
             )
-            bounce_rate = (bounce_sessions / total_sessions * 100) if total_sessions > 0 else 0
-            
+            bounce_rate = (bounce_sessions / total_sessions *
+                           100) if total_sessions > 0 else 0
+
             # Calculate pages per session
             pages_per_session = sum(
                 len(s.page_views) for s in sessions
             ) / total_sessions if total_sessions > 0 else 0
-            
+
             return {
                 "total_sessions": total_sessions,
-                "avg_session_duration": round(avg_duration / 60, 2),  # Convert to minutes
+                # Convert to minutes
+                "avg_session_duration": round(avg_duration / 60, 2),
                 "bounce_rate": round(bounce_rate, 1),
                 "pages_per_session": round(pages_per_session, 1)
             }
@@ -263,33 +299,39 @@ class AnalyticsService:
             # Calculate date range
             end_date = datetime.utcnow()
             start_date = end_date - timedelta(days=days)
-            
+
             # Get page views and events
             page_views = self.db.query(PageView).filter(
                 PageView.site_id == site_id,
                 PageView.timestamp >= start_date,
                 PageView.timestamp <= end_date
             ).all()
-            
+
             events = self.db.query(Event).filter(
                 Event.site_id == site_id,
                 Event.timestamp >= start_date,
                 Event.timestamp <= end_date
             ).all()
-            
+
             # Calculate funnel stages
             total_visitors = len(set(pv.session_id for pv in page_views))
-            product_views = len([e for e in events if e.name == 'product_view'])
+            product_views = len(
+                [e for e in events if e.name == 'product_view'])
             add_to_cart = len([e for e in events if e.name == 'add_to_cart'])
-            checkout_starts = len([e for e in events if e.name == 'checkout_start'])
+            checkout_starts = len(
+                [e for e in events if e.name == 'checkout_start'])
             purchases = len([e for e in events if e.name == 'purchase'])
-            
+
             return [
                 {"stage": "Visitors", "count": total_visitors, "conversion": "100%"},
-                {"stage": "Product Views", "count": product_views, "conversion": f"{(product_views/total_visitors*100):.1f}%"},
-                {"stage": "Add to Cart", "count": add_to_cart, "conversion": f"{(add_to_cart/total_visitors*100):.1f}%"},
-                {"stage": "Checkout", "count": checkout_starts, "conversion": f"{(checkout_starts/total_visitors*100):.1f}%"},
-                {"stage": "Purchase", "count": purchases, "conversion": f"{(purchases/total_visitors*100):.1f}%"}
+                {"stage": "Product Views", "count": product_views,
+                    "conversion": f"{(product_views/total_visitors*100):.1f}%"},
+                {"stage": "Add to Cart", "count": add_to_cart,
+                    "conversion": f"{(add_to_cart/total_visitors*100):.1f}%"},
+                {"stage": "Checkout", "count": checkout_starts,
+                    "conversion": f"{(checkout_starts/total_visitors*100):.1f}%"},
+                {"stage": "Purchase", "count": purchases,
+                    "conversion": f"{(purchases/total_visitors*100):.1f}%"}
             ]
         except Exception as e:
             raise Exception(f"Error getting conversion funnel: {str(e)}")
@@ -297,11 +339,11 @@ class AnalyticsService:
     def get_page_visits(self, site_id: str, days: int = 30) -> List[Dict[str, Any]]:
         """
         Get page visits data for graphing.
-        
+
         Args:
             site_id (str): ID of the site
             days (int): Number of days to look back
-            
+
         Returns:
             List[Dict[str, Any]]: List of daily page visits with format:
             {
@@ -311,7 +353,7 @@ class AnalyticsService:
         """
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
-        
+
         # Initialize daily visits with default values
         daily_visits = {}
         current_date = start_date
@@ -322,7 +364,7 @@ class AnalyticsService:
                 'visits': 0
             }
             current_date += timedelta(days=1)
-        
+
         # Get actual page views
         page_views = self.db.query(
             func.date(PageView.timestamp).label('date'),
@@ -334,28 +376,28 @@ class AnalyticsService:
         ).group_by(
             func.date(PageView.timestamp)
         ).all()
-        
+
         # Update with actual data
         for date, count in page_views:
             date_str = date.isoformat()
             if date_str in daily_visits:
                 daily_visits[date_str]['visits'] = count
-        
+
         # Convert to list and sort by date
         result = list(daily_visits.values())
         result.sort(key=lambda x: x['date'])
-        
+
         return result
 
     def get_click_rate(self, site_id: str, days: int = 30) -> float:
         """
         Calculate click-through rate (CTR) as a percentage.
         CTR = (Number of clicks / Number of page views) * 100
-        
+
         Args:
             site_id (str): ID of the site
             days (int): Number of days to look back (default: 30)
-            
+
         Returns:
             float: Click rate as a percentage
         """
@@ -377,11 +419,11 @@ class AnalyticsService:
         Calculate bounce rate as a percentage.
         Bounce rate = (Number of single-page sessions / Total sessions) * 100
         A bounce is defined as a session that lasted less than 10 seconds.
-        
+
         Args:
             site_id (str): ID of the site
             days (int): Number of days to look back (default: 30)
-            
+
         Returns:
             float: Bounce rate as a percentage
         """
@@ -395,7 +437,8 @@ class AnalyticsService:
             )
             .group_by(Event.session_id)
             .having(
-                func.max(Event.timestamp) - func.min(Event.timestamp) < timedelta(seconds=10)
+                func.max(Event.timestamp) -
+                func.min(Event.timestamp) < timedelta(seconds=10)
             )
             .subquery()
         )
@@ -410,11 +453,11 @@ class AnalyticsService:
         """
         Calculate conversion rate as a percentage.
         Conversion rate = (Number of conversions / Total sessions) * 100
-        
+
         Args:
             site_id (str): ID of the site
             days (int): Number of days to look back (default: 30)
-            
+
         Returns:
             float: Conversion rate as a percentage
         """
@@ -436,11 +479,11 @@ class AnalyticsService:
         Retention rate = (Number of returning users / Total users) * 100
         A returning user is defined as someone who visited more than once
         with visits separated by at least 24 hours.
-        
+
         Args:
             site_id (str): ID of the site
             days (int): Number of days to look back (default: 30)
-            
+
         Returns:
             float: Retention rate as a percentage
         """
@@ -449,7 +492,7 @@ class AnalyticsService:
             Event.site_id == site_id,
             Event.timestamp >= start_date
         ).distinct().all()
-        
+
         retained = 0
         for user in users:
             sessions = self.db.query(Event.timestamp).filter(
@@ -457,14 +500,14 @@ class AnalyticsService:
                 Event.site_id == site_id,
                 Event.timestamp >= start_date
             ).order_by(Event.timestamp).all()
-            
+
             if len(sessions) < 2:
                 continue
-                
+
             first = sessions[0][0]
             for session_time in sessions[1:]:
                 if session_time[0] - first > timedelta(days=1):
                     retained += 1
                     break
-                    
+
         return round(retained / len(users) * 100, 2) if users else 0.0

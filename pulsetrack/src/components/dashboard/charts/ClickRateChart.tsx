@@ -3,85 +3,138 @@
 import { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '@/contexts/ThemeContext';
-import { analyticsService, PagePerformance } from '@/services/analytics';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface ClickRateData {
-  date: string;
-  click_rate: number;
+interface ClickData {
+  time: string;
+  clicks: number;
 }
 
 export default function ClickRateChart() {
   const { currentTheme, getThemeColor } = useTheme();
   const themeColor = getThemeColor(currentTheme);
-  const [data, setData] = useState<ClickRateData[]>([]);
+  const [data, setData] = useState<ClickData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const [ws, setWs] = useState<WebSocket | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!user) return;
-        const response = await analyticsService.getPagePerformance(user.id.toString());
-        // Transform the data to calculate click rate
-        const clickRateData = response.map((page: PagePerformance) => ({
-          date: page.date,
-          click_rate: page.clicks / (page.pageviews || 1) * 100 // Avoid division by zero
-        }));
-        setData(clickRateData);
-      } catch (err) {
-        console.error('Error fetching click rate data:', err);
-        setError('Failed to load click rate data');
-      } finally {
+    // Set up WebSocket connection
+    const wsUrl = `ws://localhost:8000/ws/${user?.id || 'anonymous'}`;
+    console.log('Attempting to connect to WebSocket:', wsUrl);
+    
+    try {
+      const wsClient = new WebSocket(wsUrl);
+      
+      wsClient.onopen = () => {
+        console.log('WebSocket Connected Successfully');
         setLoading(false);
-      }
-    };
+        setError(null);
+      };
 
-    fetchData();
+      wsClient.onmessage = (event) => {
+        console.log('WebSocket message received:', event.data);
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === 'analytics_update') {
+            console.log('Updating chart with data:', message.data);
+            setData(message.data);
+          }
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err);
+        }
+      };
+
+      wsClient.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setError('Failed to connect to analytics server. Please check if the server is running on port 8000.');
+        setLoading(false);
+      };
+
+      wsClient.onclose = (event) => {
+        console.log('WebSocket Disconnected:', event.code, event.reason);
+        if (event.code === 1006) {
+          setError('Connection lost. Please check if the FastAPI server is running on port 8000.');
+        }
+      };
+
+      setWs(wsClient);
+
+      // Cleanup on unmount
+      return () => {
+        console.log('Cleaning up WebSocket connection');
+        if (wsClient.readyState === WebSocket.OPEN) {
+          wsClient.close();
+        }
+      };
+    } catch (err) {
+      console.error('Error creating WebSocket:', err);
+      setError('Failed to create WebSocket connection');
+      setLoading(false);
+    }
   }, [user]);
 
   if (loading) {
-    return <div className="h-[500px] flex items-center justify-center">Loading...</div>;
+    return <div className="h-[500px] flex items-center justify-center">Connecting to analytics server...</div>;
   }
 
   if (error) {
-    return <div className="h-[500px] flex items-center justify-center text-red-500">{error}</div>;
+    return (
+      <div className="h-[500px] flex flex-col items-center justify-center text-red-500">
+        <div>{error}</div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Retry Connection
+        </button>
+      </div>
+    );
   }
 
   if (!data.length) {
-    return <div className="h-[500px] flex items-center justify-center">No click rate data available</div>;
+    return <div className="h-[500px] flex items-center justify-center">No click data available</div>;
   }
 
   return (
     <div className="h-[500px] w-full">
-      <h3 className="text-base font-semibold mb-4">Click Rate Over Time</h3>
+      <h3 className="text-base font-semibold mb-4">Clicks Over Time</h3>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
           <defs>
-            <linearGradient id="colorClickRate" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={themeColor} stopOpacity={0.8}/>
               <stop offset="95%" stopColor={themeColor} stopOpacity={0}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
-            dataKey="date" 
-            tickFormatter={(date) => new Date(date).toLocaleDateString()}
+            dataKey="time" 
+            tick={{ fontSize: 12 }}
+            interval={0}
+            angle={-45}
+            textAnchor="end"
+            height={60}
           />
           <YAxis 
-            tickFormatter={(value) => `${value.toFixed(1)}%`}
+            tickFormatter={(value) => `${value}`}
+            domain={[0, 'auto']}
+            tick={{ fontSize: 12 }}
           />
           <Tooltip 
-            formatter={(value: number) => [`${value.toFixed(1)}%`, 'Click Rate']}
-            labelFormatter={(date) => new Date(date).toLocaleDateString()}
+            formatter={(value: number) => [`${value} clicks`, 'Clicks']}
+            labelStyle={{ fontSize: 12 }}
+            contentStyle={{ fontSize: 12 }}
           />
           <Area 
             type="monotone" 
-            dataKey="click_rate" 
+            dataKey="clicks" 
             stroke={themeColor}
+            strokeWidth={2}
             fillOpacity={1} 
-            fill="url(#colorClickRate)" 
+            fill="url(#colorClicks)" 
+            animationDuration={300}
           />
         </AreaChart>
       </ResponsiveContainer>

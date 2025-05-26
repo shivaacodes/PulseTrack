@@ -48,8 +48,14 @@ async def create_event(
     Returns:
         EventResponse: Created event record
     """
-    analytics_service = AnalyticsService(db)
-    return analytics_service.create_event(event)
+    try:
+        analytics_service = AnalyticsService(db)
+        return analytics_service.create_event(event)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": str(e)}
+        )
 
 @router.get("/events", response_model=List[EventResponse])
 async def get_events(

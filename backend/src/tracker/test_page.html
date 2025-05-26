@@ -77,11 +77,91 @@
         <button class="viewDetails">View Details</button>
     </div>
 
+    <!-- WebSocket Test Section -->
+    <div class="form-container">
+        <h2>WebSocket Test</h2>
+        <div id="ws-status">WebSocket Status: Disconnected</div>
+        <div id="ws-messages" style="height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin: 10px 0;"></div>
+        <input type="text" id="ws-message" placeholder="Type a message...">
+        <button id="ws-send">Send Message</button>
+    </div>
+
     <!-- PulseTrack Tracker Script -->
     <script src="/static/tracker.js" data-site-id="7"></script>
 
     <!-- Test Script -->
     <script>
+        // WebSocket connection
+        const wsStatus = document.getElementById('ws-status');
+        const wsMessages = document.getElementById('ws-messages');
+        const wsMessageInput = document.getElementById('ws-message');
+        const wsSendButton = document.getElementById('ws-send');
+        
+        let ws = null;
+        const clientId = 'test_' + Math.random().toString(36).substring(2, 15);
+
+        function connectWebSocket() {
+            ws = new WebSocket(`ws://${window.location.host}/ws/${clientId}`);
+
+            ws.onopen = () => {
+                wsStatus.textContent = 'WebSocket Status: Connected';
+                wsStatus.style.color = 'green';
+                appendMessage('System', 'Connected to WebSocket server');
+            };
+
+            ws.onclose = () => {
+                wsStatus.textContent = 'WebSocket Status: Disconnected';
+                wsStatus.style.color = 'red';
+                appendMessage('System', 'Disconnected from WebSocket server');
+                // Try to reconnect after 5 seconds
+                setTimeout(connectWebSocket, 5000);
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                let message = '';
+                if (data.type === 'connection') {
+                    message = data.message;
+                } else if (data.type === 'analytics_update') {
+                    message = `Analytics Update: ${JSON.stringify(data.data)}`;
+                } else if (data.type === 'message') {
+                    message = data.message;
+                } else {
+                    message = JSON.stringify(data);
+                }
+                appendMessage(data.client_id || 'Server', message);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                appendMessage('Error', 'WebSocket error occurred');
+            };
+        }
+
+        function appendMessage(sender, message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            wsMessages.appendChild(messageDiv);
+            wsMessages.scrollTop = wsMessages.scrollHeight;
+        }
+
+        wsSendButton.addEventListener('click', () => {
+            const message = wsMessageInput.value.trim();
+            if (message && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(message);
+                wsMessageInput.value = '';
+            }
+        });
+
+        wsMessageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                wsSendButton.click();
+            }
+        });
+
+        // Connect to WebSocket when page loads
+        connectWebSocket();
+
         // Test button clicks
         document.querySelectorAll('button').forEach(button => {
             button.addEventListener('click', (e) => {

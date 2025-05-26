@@ -1,7 +1,6 @@
 # Authentication endpoints (login, signup)
 
 from fastapi import APIRouter, Depends, HTTPException, status, Form
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Any
 from jose import jwt, JWTError
@@ -20,28 +19,21 @@ from .schemas import Token, UserCreate, UserResponse
 # Initialising Router
 router = APIRouter()
 
-class EmailPasswordForm:
-    def __init__(
-        self,
-        email: str = Form(...),
-        password: str = Form(...),
-    ):
-        self.email = email
-        self.password = password
 
 @router.post("/login", response_model=Token)
 async def login(
-    form_data: EmailPasswordForm = Depends(),
+    email: str = Form(...),
+    password: str = Form(...),
     db: Session = Depends(get_db)
 ) -> Any:
     """
     Login with email and password, get an access token for future requests
     """
     # Find user by email
-    user = db.query(User).filter(User.email == form_data.email).first()
+    user = db.query(User).filter(User.email == email).first()
 
     # Check if user exists and password is correct
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user or not verify_password(password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -84,7 +76,7 @@ async def refresh_token(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid refresh token"
             )
-        
+
         # Get user
         user = db.query(User).filter(User.email == email).first()
         if not user:
@@ -92,10 +84,11 @@ async def refresh_token(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found"
             )
-        
+
         # Create new tokens
-        access_token, new_refresh_token = create_tokens(data={"sub": user.email})
-        
+        access_token, new_refresh_token = create_tokens(
+            data={"sub": user.email})
+
         return {
             "access_token": access_token,
             "refresh_token": new_refresh_token,

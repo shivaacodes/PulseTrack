@@ -1,7 +1,7 @@
 # JWT authentication logic
 
 from datetime import datetime, timedelta
-from typing import Optional, Tuple
+from typing import Tuple
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
@@ -19,7 +19,7 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
-REFRESH_TOKEN_EXPIRE_DAYS = 30  # 30 days
+REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -36,17 +36,17 @@ def get_password_hash(password: str) -> str:
 def create_tokens(data: dict) -> Tuple[str, str]:
     """Create both access and refresh tokens."""
     to_encode = data.copy()
-    
+
     # Create access token
     access_expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": access_expire})
     access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    
+
     # Create refresh token
     refresh_expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": refresh_expire})
     refresh_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    
+
     return access_token, refresh_token
 
 
@@ -66,7 +66,7 @@ async def get_current_user(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    
+
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception

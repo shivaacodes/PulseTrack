@@ -1,21 +1,26 @@
-import React from 'react';
-import { SidebarProvider, SidebarInset, SidebarRail, SidebarTrigger } from '@/components/ui/sidebar';
-import DashboardSidebar from './Sidebar';
-import ThemeSelector from './ThemeSelector';
-import ChartSelector from './ChartSelector';
-import SalesTable from './SalesTable';
-import LogoutButton from './LogoutButton';
-import { 
-  Users, 
-  BarChart3, 
-  MousePointerClick, 
-  UserCheck,
-  Clock,
-  Target,
-  Zap,
-  Activity,
-  Settings2
-} from 'lucide-react';
+import React from "react";
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarRail,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import DashboardSidebar from "./Sidebar";
+import ThemeSelector from "./ThemeSelector";
+import ChartSelector from "./ChartSelector";
+//import SalesTable from "./SalesTable";
+import LogoutButton from "./LogoutButton";
+import {
+  //   Users,
+  //   BarChart3,
+  //   MousePointerClick,
+  //   UserCheck,
+  //   Clock,
+  //   Target,
+  //   Zap,
+  //   Activity,
+  Settings2,
+} from "lucide-react";
 
 export default function Dashboard() {
   return (
@@ -31,7 +36,7 @@ export default function Dashboard() {
               </div>
               <div className="flex items-center gap-4">
                 <ThemeSelector />
-                <button 
+                <button
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   aria-label="Settings"
                 >
@@ -47,13 +52,13 @@ export default function Dashboard() {
               <div className="flex-1 min-w-0">
                 <ChartSelector />
               </div>
-              
+
               {/* Fixed sales table on the right */}
-              <div className="w-[400px] flex-shrink-0">
+              {/* <div className="w-[400px] flex-shrink-0">
                 <div className="sticky top-24">
                   <SalesTable />
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </SidebarInset>
