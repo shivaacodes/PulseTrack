@@ -36,7 +36,8 @@
   const clientId = 'tracker_' + Math.random().toString(36).substring(2, 15);
 
   function connectWebSocket() {
-    const wsUrl = `ws://localhost:8000/ws/${clientId}`;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/${clientId}`;
     console.log('PulseTrack: Connecting to WebSocket:', wsUrl);
     ws = new WebSocket(wsUrl);
 
@@ -55,7 +56,12 @@
     };
 
     ws.onmessage = (event) => {
-      console.log('PulseTrack: WebSocket message received:', event.data);
+      try {
+        const data = JSON.parse(event.data);
+        console.log('PulseTrack: WebSocket message received:', data);
+      } catch (error) {
+        console.error('PulseTrack: Error parsing WebSocket message:', error);
+      }
     };
   }
 
@@ -67,55 +73,42 @@
     const visitorId = getVisitorId();
     const payload = {
       name: name,
-      site_id: parsedSiteId,
+      domain: window.location.hostname,
       properties: {
         ...properties,
-        user_agent: navigator.userAgent,
-        screen_width: window.innerWidth,
-        screen_height: window.innerHeight,
         timestamp: new Date().toISOString(),
-        visitor_id: visitorId
+        visitor_id: visitorId,
+        path: window.location.pathname
       }
     };
-
-    console.log('PulseTrack: Tracking event:', name, payload);
 
     try {
       // Send to REST API
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(payload),
-        mode: "cors",
-        keepalive: true
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
-        let errorMessage;
-        try {
-          const errorData = await response.json();
-          errorMessage = JSON.stringify(errorData);
-        } catch (e) {
-          errorMessage = await response.text();
-        }
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorMessage}`);
+        const errorData = await response.json();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${JSON.stringify(errorData)}`);
       }
 
       // Also send through WebSocket for real-time updates
       if (ws && ws.readyState === WebSocket.OPEN) {
         const wsMessage = {
-          type: "analytics_event",
+          type: "analytics_update",
           site_id: parsedSiteId,
           name: name,
-          properties: payload.properties
+          data: [{
+            time: new Date().toLocaleTimeString(),
+            clicks: name === 'click' ? 1 : 0
+          }]
         };
-        console.log('PulseTrack: Sending WebSocket message:', wsMessage);
         ws.send(JSON.stringify(wsMessage));
-      } else {
-        console.warn('PulseTrack: WebSocket not connected, cannot send real-time update');
       }
     } catch (error) {
       console.error("PulseTrack: Error sending event", error);
@@ -124,9 +117,7 @@
 
   // Track page view on load
   window.addEventListener("load", () => {
-    trackEvent("pageview", {
-      title: document.title
-    });
+    trackPageView();
   });
 
   // Track clicks
@@ -136,14 +127,7 @@
     
     // Only track clicks on buttons and interactive elements
     if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.tagName === 'INPUT') {
-      trackEvent("click", {
-        element: target.tagName.toLowerCase(),
-        id: target.id || null,
-        class: target.className || null,
-        text: target.textContent?.trim().substring(0, 50) || null,
-        x: event.clientX,
-        y: event.clientY
-      });
+      trackClick(event);
     }
   });
 
@@ -167,4 +151,40 @@
       }
     }
   });
+
+  // Track click events
+  function trackClick(e) {
+    const target = e.target;
+    const properties = {
+      element: target.tagName.toLowerCase(),
+      id: target.id || null,
+      class: target.className || null,
+      text: target.textContent?.trim() || null,
+      timestamp: new Date().toISOString()
+    };
+
+    trackEvent('click', properties);
+  }
+
+  // Track page views
+  function trackPageView() {
+    const properties = {
+      path: window.location.pathname,
+      timestamp: new Date().toISOString()
+    };
+
+    trackEvent('pageview', properties);
+  }
+
+  // Track form submissions
+  function trackFormSubmit(e) {
+    const form = e.target;
+    const properties = {
+      form_id: form.id || null,
+      form_action: form.action || null,
+      timestamp: new Date().toISOString()
+    };
+
+    trackEvent('form_submit', properties);
+  }
 })();

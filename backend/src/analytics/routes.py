@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
+import json
 
 from ..database import get_db
 from ..db.models.user import User
@@ -30,28 +31,52 @@ from .service import AnalyticsService
 
 router = APIRouter(prefix="/api/v1/analytics", tags=["analytics"])
 
-@router.post("/events", response_model=EventResponse)
+@router.post("/events")
 async def create_event(
-    event: EventCreate,
+    event: dict,
     db: Session = Depends(get_db)
 ):
     """
     Create a new analytics event.
-    
-    This endpoint is used to track user interactions and system events.
-    For pageview events, it will also create a page view record.
-    
-    Args:
-        event (EventCreate): Event data including name, type, and properties
-        db (Session): Database session (injected)
-        
-    Returns:
-        EventResponse: Created event record
     """
     try:
-        analytics_service = AnalyticsService(db)
-        return analytics_service.create_event(event)
+        # Get or create site
+        site = db.query(Site).filter(Site.domain == event.get('domain')).first()
+        if not site:
+            site = Site(
+                name=f"Site {event.get('domain')}",
+                domain=event.get('domain'),
+                user_id=1  # Default user for now
+            )
+            db.add(site)
+            db.commit()
+            db.refresh(site)
+
+        # Create the event
+        analytics_event = Event(
+            site_id=site.id,
+            name=event.get('name'),
+            properties=event.get('properties', {})
+        )
+        db.add(analytics_event)
+        db.commit()
+        db.refresh(analytics_event)
+
+        # If it's a click event, update WebSocket
+        if event.get('name') == 'click':
+            from src.websocket.manager import manager
+            click_data = manager.record_click(str(site.id))
+            # Broadcast to all clients
+            await manager.broadcast(json.dumps({
+                "type": "analytics_update",
+                "site_id": str(site.id),
+                "data": click_data
+            }))
+
+        return {"status": "success", "event_id": analytics_event.id}
     except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating event: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"error": str(e)}

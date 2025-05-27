@@ -54,49 +54,36 @@ class ConnectionManager:
         now = datetime.utcnow()
         time_str = now.strftime('%H:%M:%S')
         
-        logger.info(f"Recording click for site {site_id} at {time_str}")
-        
         # Initialize click data for new sites
         if site_id not in self.click_counts:
             self.click_counts[site_id] = []
-            # Initialize with empty data for the last 10 minutes
-            for i in range(10):
-                past_time = now - timedelta(minutes=i)
-                self.click_counts[site_id].append({
-                    'time': past_time.strftime('%H:%M:%S'),
-                    'clicks': 0
-                })
-            logger.info(f"Initialized click data for site {site_id}")
         
-        # Add new click
-        self.click_counts[site_id].append({
-            'time': time_str,
-            'clicks': 1
-        })
-        logger.info(f"Added click at {time_str} for site {site_id}")
+        # Find or create entry for current time
+        current_entry = next(
+            (entry for entry in self.click_counts[site_id] if entry['time'] == time_str),
+            None
+        )
         
-        # Keep only last 10 minutes of data
-        cutoff_time = now - timedelta(minutes=10)
-        self.click_counts[site_id] = [
-            click for click in self.click_counts[site_id]
-            if datetime.strptime(click['time'], '%H:%M:%S') > cutoff_time
-        ]
+        if current_entry:
+            current_entry['clicks'] += 1
+        else:
+            # Add new entry
+            self.click_counts[site_id].append({
+                'time': time_str,
+                'clicks': 1
+            })
+            
+            # Remove old entries (keep last 20 entries)
+            if len(self.click_counts[site_id]) > 20:
+                self.click_counts[site_id] = self.click_counts[site_id][-20:]
         
-        # Aggregate clicks by time
-        aggregated_data = {}
-        for click in self.click_counts[site_id]:
-            if click['time'] in aggregated_data:
-                aggregated_data[click['time']]['clicks'] += 1
-            else:
-                aggregated_data[click['time']] = click
-        
-        # Convert to list and sort by time
+        # Sort by time
         result = sorted(
-            aggregated_data.values(),
+            self.click_counts[site_id],
             key=lambda x: x['time']
         )
         
-        logger.info(f"Current click data for site {site_id}: {result}")
+        logger.info(f"Updated click data for site {site_id}: {result}")
         return result
 
 # Create a global instance of the connection manager

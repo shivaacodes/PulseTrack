@@ -34,12 +34,23 @@ export default function ClickRateChart() {
       };
 
       wsClient.onmessage = (event) => {
-        console.log('WebSocket message received:', event.data);
         try {
           const message = JSON.parse(event.data);
-          if (message.type === 'analytics_update') {
-            console.log('Updating chart with data:', message.data);
-            setData(message.data);
+          if (message.type === 'analytics_update' && message.data) {
+            setData(prevData => {
+              // Merge new data with existing data
+              const newData = [...prevData];
+              message.data.forEach(item => {
+                const existingIndex = newData.findIndex(d => d.time === item.time);
+                if (existingIndex >= 0) {
+                  newData[existingIndex].clicks += item.clicks;
+                } else {
+                  newData.push(item);
+                }
+              });
+              // Keep only last 20 data points
+              return newData.slice(-20);
+            });
           }
         } catch (err) {
           console.error('Error parsing WebSocket message:', err);

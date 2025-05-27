@@ -150,3 +150,50 @@
     font-family: var(--font-poppins), sans-serif;
   }
 }
+
+/* Chart styles */
+.chart-container {
+  height: 500px;
+  width: 100%;
+}
+
+.chart-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.chart-loading {
+  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-error {
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgb(239, 68, 68);
+}
+
+.chart-error-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: rgb(59, 130, 246);
+  color: white;
+  border-radius: 0.375rem;
+}
+
+.chart-error-button:hover {
+  background-color: rgb(37, 99, 235);
+}
+
+.chart-no-data {
+  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

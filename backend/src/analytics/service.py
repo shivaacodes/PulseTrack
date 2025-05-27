@@ -7,9 +7,9 @@
 # - User retention analysis
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case, and_
+from sqlalchemy import func
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 from ..db.models.event import Event
 from ..db.models.pageview import PageView
 from ..db.models.session import Session as DBSession

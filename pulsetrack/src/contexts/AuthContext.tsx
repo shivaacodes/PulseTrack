@@ -13,6 +13,72 @@ const api = axios.create({
   withCredentials: true,
 });
 
+// Add response interceptor for token refresh
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If error is 401 and we haven't tried to refresh token yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) {
+          throw new Error("No refresh token available");
+        }
+
+        // Call refresh token endpoint with form data
+        const formData = new URLSearchParams();
+        formData.append("refresh_token", refreshToken);
+        
+        const response = await api.post("/api/v1/auth/refresh", formData.toString(), {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        });
+
+        const { access_token, refresh_token } = response.data as AuthResponse;
+
+        // Update tokens in localStorage
+        localStorage.setItem("token", access_token);
+        localStorage.setItem("refreshToken", refresh_token);
+
+        // Update the failed request's authorization header
+        if (originalRequest.headers) {
+          originalRequest.headers["Authorization"] = `Bearer ${access_token}`;
+        }
+
+        // Retry the original request
+        return api(originalRequest);
+      } catch (refreshError) {
+        // If refresh token fails, logout user
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login";
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+// Add request interceptor to add token to all requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token && config.headers) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 interface User {
   id: number;
   email: string;
@@ -63,14 +129,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const fetchUser = async (token: string) => {
     try {
-      const response = await api.get<User>("/api/v1/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get<User>("/api/v1/auth/me");
       setUser(response.data);
       setIsAuthenticated(true);
     } catch (error) {
       console.error("Error fetching user:", error);
-      logout();
+      // Don't call logout here as the interceptor will handle it
     }
   };
 
@@ -91,11 +155,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Store tokens and update auth state
       localStorage.setItem("token", access_token);
       localStorage.setItem("refreshToken", refresh_token);
-      await fetchUser(access_token);
+      
+      // Set auth state immediately
+      setIsAuthenticated(true);
+      
+      // Fetch user data
+      try {
+        const userResponse = await api.get<User>("/api/v1/auth/me");
+        setUser(userResponse.data);
+      } catch (error) {
+        console.error("Error fetching user after login:", error);
+      }
 
       return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
+    } catch (error: any) {
+      if (error?.response) {
         console.error("Login error details:", {
           status: error.response?.status,
           data: error.response?.data,
@@ -119,8 +193,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await login(email, password);
 
       return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
+    } catch (error: any) {
+      if (error?.response) {
         throw new Error(error.response?.data?.detail || error.message);
       }
       throw error;

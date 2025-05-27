@@ -13,12 +13,13 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     """WebSocket endpoint for real-time communication"""
     try:
         await manager.connect(websocket, client_id)
-        
+
         # Send welcome message
         await manager.send_personal_message(
             json.dumps({
@@ -41,25 +42,26 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
             }),
             client_id
         )
-        
+
         try:
             while True:
                 # Wait for messages from the client
                 data = await websocket.receive_text()
                 message_data = json.loads(data)
                 logger.info(f"Received message: {message_data}")
-                
+
                 # Handle analytics events
                 if message_data.get("type") == "analytics_event":
                     site_id = message_data.get("site_id")
                     event_name = message_data.get("name")
-                    
+
                     if site_id and event_name == "click":
-                        logger.info(f"Processing click event for site {site_id}")
+                        logger.info(
+                            f"Processing click event for site {site_id}")
                         # Get updated click data from manager
                         click_data = manager.record_click(str(site_id))
                         logger.info(f"Updated click data: {click_data}")
-                        
+
                         # Broadcast the analytics update to all clients
                         await manager.broadcast(
                             json.dumps({
@@ -79,7 +81,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                         }),
                         client_id
                     )
-                
+
         except WebSocketDisconnect:
             manager.disconnect(client_id)
             # Notify other clients about the disconnection
@@ -91,7 +93,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                     "timestamp": datetime.utcnow().isoformat()
                 })
             )
-            
+
     except Exception as e:
         # Handle any other exceptions
         logger.error(f"WebSocket error: {str(e)}")
@@ -99,9 +101,10 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
             manager.disconnect(client_id)
         raise e
 
+
 @router.websocket("/ws")
 async def websocket_endpoint_anonymous(websocket: WebSocket):
     """WebSocket endpoint for anonymous connections"""
     # Generate a random client ID for anonymous connections
     client_id = str(uuid.uuid4())
-    await websocket_endpoint(websocket, client_id) 
+    await websocket_endpoint(websocket, client_id)

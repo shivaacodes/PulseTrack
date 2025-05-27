@@ -61,6 +61,7 @@ export default function DashboardSidebar() {
             src="/images/PulseTrack.png"
             alt="PulseTrack Logo"
             fill
+            sizes="(max-width: 768px) 100vw, 180px"
             className="object-cover"
             priority
           />
