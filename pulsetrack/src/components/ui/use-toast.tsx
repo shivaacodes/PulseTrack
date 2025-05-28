@@ -11,10 +11,12 @@ export function useToast() {
     if (variant === "destructive") {
       sonnerToast.error(title, {
         description,
+        position: "bottom-right",
       })
     } else {
       sonnerToast(title, {
         description,
+        position: "bottom-right",
       })
     }
   }

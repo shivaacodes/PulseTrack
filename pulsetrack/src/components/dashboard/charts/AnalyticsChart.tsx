@@ -5,6 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useTheme } from '@/contexts/ThemeContext';
 import { analyticsService, AnalyticsOverview } from '@/services/analytics';
 import { useAuth } from '@/contexts/AuthContext';
+import Loader from '@/components/ui/loader';
 
 export default function AnalyticsChart() {
   const { currentTheme, getThemeColor } = useTheme();
@@ -32,7 +33,7 @@ export default function AnalyticsChart() {
   }, [user]);
 
   if (loading) {
-    return <div className="h-[500px] flex items-center justify-center">Loading...</div>;
+    return <div className="h-[500px]"><Loader /></div>;
   }
 
   if (error) {

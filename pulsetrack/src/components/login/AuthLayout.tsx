@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -27,6 +28,9 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
             className="h-16 w-auto"
             priority
           />
+        </div>
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
         </div>
       </div>
 

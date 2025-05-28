@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -11,6 +11,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { analyticsService } from "@/services/analytics";
+import Loader from "@/components/ui/loader";
 
 interface ConversionData {
   time: string;
@@ -23,6 +26,7 @@ const ConversionRateChart: React.FC = () => {
   const [data, setData] = useState<ConversionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   // Function to get time in HH:MM format
   const getTimeString = (date: Date) => {
@@ -33,36 +37,28 @@ const ConversionRateChart: React.FC = () => {
     });
   };
 
-  // Function to generate last 10 minutes data
-  const generateTimeData = () => {
-    const now = new Date();
-    const data = [];
-    for (let i = 9; i >= 0; i--) {
-      const time = new Date(now.getTime() - i * 60000); // Subtract i minutes
-      data.push({
-        time: getTimeString(time),
-        rate: Math.floor(Math.random() * 100) // Random conversion rate between 0-100
-      });
-    }
-    return data;
-  };
-
-  const handleWebSocketError = useCallback(() => {
-    setError('Failed to connect to analytics server. Please check if the server is running on port 8000.');
-    setLoading(false);
-  }, []);
-
-  const handleWebSocketClose = useCallback((event: CloseEvent) => {
-    console.log('WebSocket Disconnected:', event.code, event.reason);
-    if (event.code === 1006) {
-      setError('Connection lost. Please check if the FastAPI server is running on port 8000.');
-    }
-  }, []);
-
   useEffect(() => {
-    // Initialize with test data
-    setData(generateTimeData());
-    setLoading(false);
+    const fetchData = async () => {
+      try {
+        if (!user) return;
+        setLoading(true);
+        
+        // Get initial conversion rate
+        const conversionRate = await analyticsService.getConversionRate(user.id.toString());
+        const initialData = [{
+          time: getTimeString(new Date()),
+          rate: conversionRate
+        }];
+        setData(initialData);
+      } catch (err) {
+        console.error('Error fetching conversion rate:', err);
+        setError('Failed to load conversion rate data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
 
     // WebSocket connection for real-time updates
     const ws = new WebSocket('ws://localhost:8000/ws/analytics');
@@ -74,7 +70,7 @@ const ConversionRateChart: React.FC = () => {
     ws.onmessage = (event) => {
       try {
         const newData = JSON.parse(event.data);
-        if (newData.type === 'analytics_update') {
+        if (newData.type === 'analytics_update' && newData.data.conversion_rate !== undefined) {
           setData(prevData => {
             const updatedData = [...prevData];
             const time = getTimeString(new Date());
@@ -94,36 +90,25 @@ const ConversionRateChart: React.FC = () => {
       }
     };
 
-    ws.onerror = handleWebSocketError;
-    ws.onclose = handleWebSocketClose;
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
 
     return () => {
       ws.close();
     };
-  }, [handleWebSocketError, handleWebSocketClose]);
+  }, [user]);
 
   if (loading) {
-    return (
-      <div className="h-[500px] flex items-center justify-center">
-        Loading...
-      </div>
-    );
+    return <div className="h-[500px]"><Loader /></div>;
   }
 
   if (error) {
-    return (
-      <div className="h-[500px] flex items-center justify-center text-red-500">
-        {error}
-      </div>
-    );
+    return <div className="h-[500px] flex items-center justify-center text-red-500">{error}</div>;
   }
 
-  if (!data.length) {
-    return (
-      <div className="h-[500px] flex items-center justify-center">
-        No conversion rate data available
-      </div>
-    );
+  if (!data || data.length === 0) {
+    return <div className="h-[500px] flex items-center justify-center">No conversion rate data available</div>;
   }
 
   return (
@@ -151,7 +136,7 @@ const ConversionRateChart: React.FC = () => {
           />
           <YAxis 
             tickFormatter={(value) => `${value}%`}
-            domain={[0, 100]}
+            domain={[0, 30]}
             tick={{ fontSize: 12 }}
           />
           <Tooltip

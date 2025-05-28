@@ -16,7 +16,6 @@ from ..database import get_db
 from ..db.models.user import User
 from .schemas import Token, UserCreate, UserResponse
 
-# Initialising Router
 router = APIRouter()
 
 

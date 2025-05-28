@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useTheme } from "@/contexts/ThemeContext";
+import Loader from "@/components/ui/loader";
 
 interface RetentionData {
   time: string;
@@ -103,11 +104,7 @@ const RetentionRateChart: React.FC = () => {
   }, [handleWebSocketError, handleWebSocketClose]);
 
   if (loading) {
-    return (
-      <div className="h-[500px] flex items-center justify-center">
-        Loading...
-      </div>
-    );
+    return <div className="h-[500px]"><Loader /></div>;
   }
 
   if (error) {

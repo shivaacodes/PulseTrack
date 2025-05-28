@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { analyticsService } from '@/services/analytics';
+import Loader from '@/components/ui/loader';
 
 interface ClickData {
   time: string;
@@ -111,7 +113,7 @@ export default function ClickRateChart() {
   }, [user]);
 
   if (loading) {
-    return <div className="h-[500px] flex items-center justify-center">Connecting to analytics server...</div>;
+    return <div className="h-[500px]"><Loader /></div>;
   }
 
   if (error) {

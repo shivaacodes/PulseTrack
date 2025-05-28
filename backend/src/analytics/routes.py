@@ -216,3 +216,25 @@ async def get_page_visits(
     """
     analytics_service = AnalyticsService(db)
     return analytics_service.get_page_visits(site_id, days)
+
+@router.get("/conversion-rate")
+async def get_conversion_rate(
+    site_id: str,
+    days: int = 30,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get conversion rate for a site.
+    
+    Args:
+        site_id (str): ID of the site
+        days (int): Number of days to look back (default: 30)
+        db (Session): Database session (injected)
+        current_user (User): Currently authenticated user (injected)
+        
+    Returns:
+        float: Conversion rate as a percentage
+    """
+    analytics_service = AnalyticsService(db)
+    return analytics_service.get_conversion_rate(site_id, days)

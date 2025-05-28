@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
+import Loader from "@/components/ui/loader";
 
 // Create axios instance with proper configuration
 const api = axios.create({
@@ -33,7 +34,7 @@ api.interceptors.response.use(
         const formData = new URLSearchParams();
         formData.append("refresh_token", refreshToken);
         
-        const response = await api.post("/api/v1/auth/refresh", formData.toString(), {
+        const response = await api.post<AuthResponse>("/api/v1/auth/refresh", formData.toString(), {
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
@@ -119,12 +120,23 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetchUser(token);
-    }
+    const initializeAuth = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          await fetchUser(token);
+        } catch (error) {
+          console.error("Error initializing auth:", error);
+          // Don't clear tokens here, let the interceptor handle it
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const fetchUser = async (token: string) => {
@@ -213,6 +225,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(null);
     setIsAuthenticated(false);
   };
+
+  if (isLoading) {
+    return <Loader size="md" />;
+  }
 
   return (
     <AuthContext.Provider

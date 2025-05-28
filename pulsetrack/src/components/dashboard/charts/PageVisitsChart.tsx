@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { useTheme } from "@/contexts/ThemeContext";
 import { analyticsApi } from "@/lib/api";
+import Loader from "@/components/ui/loader";
 
 interface PageVisits {
   time: string;
@@ -118,11 +119,7 @@ const PageVisitsChart: React.FC = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div className="h-[500px] flex items-center justify-center">
-        Loading...
-      </div>
-    );
+    return <div className="h-[500px]"><Loader /></div>;
   }
 
   if (error) {

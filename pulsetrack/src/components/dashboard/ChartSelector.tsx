@@ -6,8 +6,8 @@ import AnalyticsChart from "./charts/AnalyticsChart";
 import PageVisitsChart from "./charts/PageVisitsChart";
 import ClickRateChart from "./charts/ClickRateChart";
 import BounceRateChart from "./charts/BounceRateChart";
-import ConversionChart from "./charts/ConversionChart";
-import RetentionChart from "./charts/RetentionChart";
+import ConversionRateChart from "./charts/ConversionRateChart";
+import RetentionRateChart from "./charts/RetentionRateChart";
 
 type ChartType = 'analytics' | 'visits' | 'clicks' | 'bounce' | 'conversion' | 'retention';
 
@@ -25,9 +25,9 @@ export default function ChartSelector() {
       case 'bounce':
         return <BounceRateChart />;
       case 'conversion':
-        return <ConversionChart />;
+        return <ConversionRateChart />;
       case 'retention':
-        return <RetentionChart />;
+        return <RetentionRateChart />;
       default:
         return <AnalyticsChart />;
     }

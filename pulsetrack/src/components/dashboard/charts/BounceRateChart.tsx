@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   AreaChart,
   Area,
@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useTheme } from "@/contexts/ThemeContext";
+import Loader from "@/components/ui/loader";
 
 interface BounceData {
   time: string;
@@ -22,7 +23,6 @@ const BounceRateChart: React.FC = () => {
   const themeColor = getThemeColor(currentTheme);
   const [data, setData] = useState<BounceData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Function to get time in HH:MM format
   const getTimeString = (date: Date) => {
@@ -33,8 +33,8 @@ const BounceRateChart: React.FC = () => {
     });
   };
 
-  // Function to generate last 10 minutes data
-  const generateTimeData = () => {
+  // Function to generate mock data
+  const generateMockData = () => {
     const now = new Date();
     const data = [];
     for (let i = 9; i >= 0; i--) {
@@ -47,83 +47,33 @@ const BounceRateChart: React.FC = () => {
     return data;
   };
 
-  const handleWebSocketError = useCallback(() => {
-    setError('Failed to connect to analytics server. Please check if the server is running on port 8000.');
-    setLoading(false);
-  }, []);
-
-  const handleWebSocketClose = useCallback((event: CloseEvent) => {
-    console.log('WebSocket Disconnected:', event.code, event.reason);
-    if (event.code === 1006) {
-      setError('Connection lost. Please check if the FastAPI server is running on port 8000.');
-    }
-  }, []);
-
   useEffect(() => {
-    // Initialize with test data
-    setData(generateTimeData());
+    // Initialize with mock data
+    setData(generateMockData());
     setLoading(false);
 
-    // WebSocket connection for real-time updates
-    const ws = new WebSocket('ws://localhost:8000/ws/analytics');
+    // Update data every minute
+    const interval = setInterval(() => {
+      setData(prevData => {
+        const newData = [...prevData];
+        const time = getTimeString(new Date());
+        
+        // Add new data point
+        newData.push({
+          time,
+          rate: Math.floor(Math.random() * 100)
+        });
+        
+        // Keep only last 10 data points
+        return newData.slice(-10);
+      });
+    }, 60000);
 
-    ws.onopen = () => {
-      console.log('WebSocket Connected');
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const newData = JSON.parse(event.data);
-        if (newData.type === 'analytics_update') {
-          setData(prevData => {
-            const updatedData = [...prevData];
-            const time = getTimeString(new Date());
-            
-            // Add new data point
-            updatedData.push({
-              time,
-              rate: newData.data.bounce_rate
-            });
-            
-            // Keep only last 10 data points
-            return updatedData.slice(-10);
-          });
-        }
-      } catch (err) {
-        console.error('Error processing WebSocket message:', err);
-      }
-    };
-
-    ws.onerror = handleWebSocketError;
-    ws.onclose = handleWebSocketClose;
-
-    return () => {
-      ws.close();
-    };
-  }, [handleWebSocketError, handleWebSocketClose]);
+    return () => clearInterval(interval);
+  }, []);
 
   if (loading) {
-    return (
-      <div className="h-[500px] flex items-center justify-center">
-        Loading...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="h-[500px] flex items-center justify-center text-red-500">
-        {error}
-      </div>
-    );
-  }
-
-  if (!data.length) {
-    return (
-      <div className="h-[500px] flex items-center justify-center">
-        No bounce rate data available
-      </div>
-    );
+    return <div className="h-[500px]"><Loader /></div>;
   }
 
   return (
