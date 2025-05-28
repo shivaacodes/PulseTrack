@@ -2,7 +2,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from src.core.config import settings
 
-# Create SQLAlchemy engine with optimized settings
 engine = create_engine(
     settings.SQLALCHEMY_DATABASE_URL,
     pool_pre_ping=True,  # Ensures connections are still valid
@@ -17,12 +16,13 @@ Base = declarative_base()
 # Import models to register them with SQLAlchemy
 from src.db.models import User, Site, Session, PageView, Event  # noqa
 
+
 def get_db():
     """Database session dependency for FastAPI endpoints.
-    
+
     Yields:
         Session: SQLAlchemy database session
-        
+
     Usage:
         @app.get("/items")
         def read_items(db: Session = Depends(get_db)):
@@ -32,4 +32,4 @@ def get_db():
     try:
         yield db
     finally:
-        db.close() 
+        db.close()

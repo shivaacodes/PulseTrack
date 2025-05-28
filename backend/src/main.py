@@ -38,8 +38,6 @@ app.include_router(
 app.include_router(analytics_router)
 app.include_router(websocket_router, tags=["websocket"])
 
-# Health check or default root route
-
 
 @app.get("/")
 async def root():

@@ -238,3 +238,26 @@ async def get_conversion_rate(
     """
     analytics_service = AnalyticsService(db)
     return analytics_service.get_conversion_rate(site_id, days)
+
+@router.get("/retention-rate")
+async def get_retention_rate(
+    site_id: str,
+    days: int = 30,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get user retention rate for a site.
+    
+    Args:
+        site_id (str): ID of the site
+        days (int): Number of days to look back (default: 30)
+        db (Session): Database session (injected)
+        current_user (User): Currently authenticated user (injected)
+        
+    Returns:
+        float: Retention rate as a percentage
+    """
+    analytics_service = AnalyticsService(db)
+    return analytics_service.get_retention_rate(site_id, days)
+
