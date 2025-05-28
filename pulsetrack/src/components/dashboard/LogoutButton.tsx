@@ -22,10 +22,10 @@ export default function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
+      className="flex items-center gap-2 px-2 md:px-3 py-1.5 md:py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
     >
-      <LogOut className="h-4 w-4" />
-      <span>Logout</span>
+      <LogOut className="h-4 w-4 md:h-5 md:w-5" />
+      <span className="hidden md:inline">Logout</span>
     </button>
   );
 } 

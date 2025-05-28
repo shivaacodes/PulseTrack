@@ -4,6 +4,7 @@ import json
 import uuid
 from datetime import datetime
 import logging
+import asyncio
 
 from .manager import manager
 
@@ -108,3 +109,22 @@ async def websocket_endpoint_anonymous(websocket: WebSocket):
     # Generate a random client ID for anonymous connections
     client_id = str(uuid.uuid4())
     await websocket_endpoint(websocket, client_id)
+
+
+@router.websocket("/ws/analytics")
+async def websocket_endpoint(websocket: WebSocket):
+    site_id = "1"  # Default site ID for now
+    await manager.connect(websocket, site_id)
+    try:
+        while True:
+            # Send initial analytics data
+            await manager.broadcast_analytics_update(site_id)
+            
+            # Wait for 30 seconds before next update
+            await asyncio.sleep(30)
+            
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, site_id)
+    except Exception as e:
+        print(f"WebSocket error: {str(e)}")
+        manager.disconnect(websocket, site_id)

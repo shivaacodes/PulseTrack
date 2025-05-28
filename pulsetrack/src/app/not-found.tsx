@@ -15,6 +15,7 @@ const NotFound = () => {
     );
   }, [pathname]);
 
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background/95 to-background p-4">
       {/* Decorative background elements */}

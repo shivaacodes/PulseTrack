@@ -1,6 +1,7 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from datetime import datetime
+
 
 class EventBase(BaseModel):
     """Base schema for event data."""
@@ -13,9 +14,11 @@ class EventBase(BaseModel):
     session_id: Optional[str] = None
     user_id: Optional[str] = None
 
+
 class EventCreate(EventBase):
     """Schema for creating a new event."""
     pass
+
 
 class EventResponse(EventBase):
     """Schema for event response."""
@@ -23,6 +26,7 @@ class EventResponse(EventBase):
 
     class Config:
         from_attributes = True
+
 
 class EventFilter(BaseModel):
     """Schema for filtering events."""

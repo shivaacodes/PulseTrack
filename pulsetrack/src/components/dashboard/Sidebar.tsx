@@ -17,48 +17,57 @@ import {
   Target
 } from "lucide-react";
 import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
+import { useTheme } from "next-themes";
 
 export default function DashboardSidebar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { theme } = useTheme();
+
   const menuItems = [
     { 
       name: 'Analytics', 
       icon: <Activity className="h-7 w-7" />,
-      path: '/',
-      active: true
+      chart: 'analytics'
     },
     { 
       name: 'Page Visits', 
       icon: <BarChart3 className="h-7 w-7" />,
-      path: '/page-visits'
+      chart: 'page-visits'
     },
     { 
       name: 'Click Rate', 
       icon: <MousePointerClick className="h-7 w-7" />,
-      path: '/click-tracking'
+      chart: 'click-tracking'
     },
     { 
       name: 'Bounce Rate', 
       icon: <ArrowDownToLine className="h-7 w-7" />,
-      path: '/bounce-rate'
+      chart: 'bounce-rate'
     },
     { 
       name: 'Conversion', 
       icon: <Target className="h-7 w-7" />,
-      path: '/conversion-rate'
+      chart: 'conversion-rate'
     },
     { 
       name: 'Retention', 
       icon: <UserCheck className="h-7 w-7" />,
-      path: '/use-retention'
+      chart: 'user-retention'
     }
   ];
 
+  const handleChartSelect = (chart: string) => {
+    router.push(`/dashboard?chart=${chart}`);
+  };
+
   return (
-    <Sidebar className="border-r border-gray-200">
-      <SidebarHeader className="px-8 border-b border-gray-200">
+    <Sidebar className="border-r border-border bg-background">
+      <SidebarHeader className="px-8 border-b border-border">
         <div className="relative w-[180px] h-[80px]">
           <Image
-            src="/images/PulseTrack.png"
+            src={theme === 'dark' ? "/images/Pulsetrack-dark.png" : "/images/Pulsetrack-light.png"}
             alt="PulseTrack Logo"
             fill
             sizes="(max-width: 768px) 100vw, 180px"
@@ -73,13 +82,16 @@ export default function DashboardSidebar() {
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton 
                 asChild 
-                isActive={item.active}
-                className="w-full px-6 py-5 rounded-xl transition-all hover:bg-gray-100 hover:scale-[1.02] active:scale-[0.98]"
+                isActive={pathname === '/dashboard' && new URLSearchParams(window.location.search).get('chart') === item.chart}
+                className="w-full px-6 py-5 rounded-xl transition-all hover:bg-muted hover:scale-[1.02] active:scale-[0.98]"
               >
-                <a href={item.path} className="flex items-center gap-5 text-gray-700 hover:text-black">
+                <button 
+                  onClick={() => handleChartSelect(item.chart)}
+                  className="flex items-center gap-5 text-muted-foreground hover:text-foreground w-full"
+                >
                   {item.icon}
                   <span className="font-semibold text-lg">{item.name}</span>
-                </a>
+                </button>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}

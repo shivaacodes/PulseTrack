@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import { ThemeProvider as NextThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { Providers } from "@/providers";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -10,14 +11,18 @@ const poppins = Poppins({
   subsets: ["latin"],
   variable: "--font-poppins",
   display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {
   title: {
     default: "PulseTrack",
-    template: "%s | My Next App",
+    template: "%s | PulseTrack",
   },
-  description: "A modern Next.js application with optimized performance.",
+  description: "A modern analytics platform for tracking and visualizing your website's performance.",
+  keywords: ["analytics", "dashboard", "tracking", "performance", "metrics"],
+  authors: [{ name: "Shiva Sajay" }],
+  creator: "PulseTrack",
 };
 
 export const viewport: Viewport = {
@@ -27,6 +32,8 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#000000" },
   ],
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -37,17 +44,21 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${poppins.variable} antialiased bg-white text-black min-h-screen`}
+        className={`${poppins.variable} antialiased bg-background text-foreground min-h-screen`}
       >
         <NextThemeProvider
           attribute="class"
-          defaultTheme="light"
-          forcedTheme="light"
-          enableSystem={false}
+          defaultTheme="system"
+          enableSystem={true}
           disableTransitionOnChange
+          storageKey="pulsetrack-theme"
         >
           <ThemeProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <Providers>
+                {children}
+              </Providers>
+            </AuthProvider>
           </ThemeProvider>
         </NextThemeProvider>
       </body>

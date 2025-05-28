@@ -1,4 +1,3 @@
-// PulseTrack Analytics Tracker
 // This script tracks user interactions and sends them to the PulseTrack backend
 
 (function () {
@@ -20,47 +19,47 @@
 
   // Generate a unique visitor ID if not exists
   function getVisitorId() {
-    let visitorId = localStorage.getItem('pulsetrack_visitor_id');
+    let visitorId = localStorage.getItem("pulsetrack_visitor_id");
     if (!visitorId) {
-      visitorId = 'vis_' + Math.random().toString(36).substring(2, 15);
-      localStorage.setItem('pulsetrack_visitor_id', visitorId);
+      visitorId = "vis_" + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem("pulsetrack_visitor_id", visitorId);
     }
     return visitorId;
   }
 
   // Base URL for PulseTrack API
   const API_URL = "/api/v1/analytics/events";
-  
+
   // WebSocket connection
   let ws = null;
-  const clientId = 'tracker_' + Math.random().toString(36).substring(2, 15);
+  const clientId = "tracker_" + Math.random().toString(36).substring(2, 15);
 
   function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws/${clientId}`;
-    console.log('PulseTrack: Connecting to WebSocket:', wsUrl);
+    console.log("PulseTrack: Connecting to WebSocket:", wsUrl);
     ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log('PulseTrack: WebSocket Connected');
+      console.log("PulseTrack: WebSocket Connected");
     };
 
     ws.onclose = () => {
-      console.log('PulseTrack: WebSocket Disconnected');
+      console.log("PulseTrack: WebSocket Disconnected");
       // Try to reconnect after 5 seconds
       setTimeout(connectWebSocket, 5000);
     };
 
     ws.onerror = (error) => {
-      console.error('PulseTrack: WebSocket Error', error);
+      console.error("PulseTrack: WebSocket Error", error);
     };
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('PulseTrack: WebSocket message received:', data);
+        console.log("PulseTrack: WebSocket message received:", data);
       } catch (error) {
-        console.error('PulseTrack: Error parsing WebSocket message:', error);
+        console.error("PulseTrack: Error parsing WebSocket message:", error);
       }
     };
   }
@@ -78,8 +77,8 @@
         ...properties,
         timestamp: new Date().toISOString(),
         visitor_id: visitorId,
-        path: window.location.pathname
-      }
+        path: window.location.pathname,
+      },
     };
 
     try {
@@ -87,14 +86,18 @@
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${JSON.stringify(errorData)}`);
+        throw new Error(
+          `HTTP error! status: ${response.status}, message: ${JSON.stringify(
+            errorData
+          )}`
+        );
       }
 
       // Also send through WebSocket for real-time updates
@@ -103,10 +106,12 @@
           type: "analytics_update",
           site_id: parsedSiteId,
           name: name,
-          data: [{
-            time: new Date().toLocaleTimeString(),
-            clicks: name === 'click' ? 1 : 0
-          }]
+          data: [
+            {
+              time: new Date().toLocaleTimeString(),
+              clicks: name === "click" ? 1 : 0,
+            },
+          ],
         };
         ws.send(JSON.stringify(wsMessage));
       }
@@ -123,10 +128,14 @@
   // Track clicks
   document.addEventListener("click", (event) => {
     const target = event.target;
-    console.log('PulseTrack: Click detected on element:', target);
-    
+    console.log("PulseTrack: Click detected on element:", target);
+
     // Only track clicks on buttons and interactive elements
-    if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.tagName === 'INPUT') {
+    if (
+      target.tagName === "BUTTON" ||
+      target.tagName === "A" ||
+      target.tagName === "INPUT"
+    ) {
       trackClick(event);
     }
   });
@@ -134,19 +143,23 @@
   // Track page unload (for session duration)
   window.addEventListener("beforeunload", () => {
     trackEvent("page_unload", {
-      duration: performance.now() / 1000 // Convert to seconds
+      duration: performance.now() / 1000, // Convert to seconds
     });
   });
 
   // Track scroll depth
   let maxScroll = 0;
   window.addEventListener("scroll", () => {
-    const scrollPercent = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight * 100;
+    const scrollPercent =
+      ((window.scrollY + window.innerHeight) /
+        document.documentElement.scrollHeight) *
+      100;
     if (scrollPercent > maxScroll) {
       maxScroll = scrollPercent;
-      if (maxScroll % 25 === 0) { // Track at 25%, 50%, 75%, 100%
+      if (maxScroll % 25 === 0) {
+        // Track at 25%, 50%, 75%, 100%
         trackEvent("scroll", {
-          depth: Math.round(maxScroll)
+          depth: Math.round(maxScroll),
         });
       }
     }
@@ -160,20 +173,20 @@
       id: target.id || null,
       class: target.className || null,
       text: target.textContent?.trim() || null,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    trackEvent('click', properties);
+    trackEvent("click", properties);
   }
 
   // Track page views
   function trackPageView() {
     const properties = {
       path: window.location.pathname,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    trackEvent('pageview', properties);
+    trackEvent("pageview", properties);
   }
 
   // Track form submissions
@@ -182,9 +195,9 @@
     const properties = {
       form_id: form.id || null,
       form_action: form.action || null,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    trackEvent('form_submit', properties);
+    trackEvent("form_submit", properties);
   }
 })();

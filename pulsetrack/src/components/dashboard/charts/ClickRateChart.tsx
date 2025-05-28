@@ -19,6 +19,29 @@ export default function ClickRateChart() {
   const { user } = useAuth();
   const [ws, setWs] = useState<WebSocket | null>(null);
 
+  // Function to get time in HH:MM format
+  const getTimeString = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+  };
+
+  // Function to generate last 10 minutes data
+  const generateTimeData = () => {
+    const now = new Date();
+    const data = [];
+    for (let i = 9; i >= 0; i--) {
+      const time = new Date(now.getTime() - i * 60000); // Subtract i minutes
+      data.push({
+        time: getTimeString(time),
+        clicks: Math.floor(Math.random() * 50) // Random data for testing
+      });
+    }
+    return data;
+  };
+
   useEffect(() => {
     // Set up WebSocket connection
     const wsUrl = `ws://localhost:8000/ws/${user?.id || 'anonymous'}`;
@@ -31,6 +54,8 @@ export default function ClickRateChart() {
         console.log('WebSocket Connected Successfully');
         setLoading(false);
         setError(null);
+        // Initialize with test data
+        setData(generateTimeData());
       };
 
       wsClient.onmessage = (event) => {
@@ -38,18 +63,17 @@ export default function ClickRateChart() {
           const message = JSON.parse(event.data);
           if (message.type === 'analytics_update' && message.data) {
             setData(prevData => {
-              // Merge new data with existing data
-              const newData = [...prevData];
-              message.data.forEach(item => {
-                const existingIndex = newData.findIndex(d => d.time === item.time);
-                if (existingIndex >= 0) {
-                  newData[existingIndex].clicks += item.clicks;
-                } else {
-                  newData.push(item);
-                }
+              const updatedData = [...prevData];
+              const time = getTimeString(new Date());
+              
+              // Add new data point
+              updatedData.push({
+                time,
+                clicks: message.data.clicks || 0
               });
-              // Keep only last 20 data points
-              return newData.slice(-20);
+              
+              // Keep only last 10 data points
+              return updatedData.slice(-10);
             });
           }
         } catch (err) {

@@ -2,17 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-
 from src.database import engine, Base
 from src.auth import auth
 from src.analytics.routes import router as analytics_router
 from src.websocket import router as websocket_router
 from src.core.config import settings
 
-# Create database tables
 Base.metadata.create_all(bind=engine)
 
-# Initialize FastAPI app
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version="1.0.0",
@@ -20,7 +17,6 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# CORS configuration (adjust allowed origins in production)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Replace with specific domains in production
@@ -49,14 +45,11 @@ app.include_router(websocket_router, tags=["websocket"])
 async def root():
     return {"message": "Welcome to PulseTrack API"}
 
-# Serve test page for development/testing the tracking script
-
 
 @app.get("/test")
 async def serve_test_page():
     return FileResponse("src/tracker/test_page.html")
 
-# Run the app using Uvicorn if executed directly
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -169,6 +169,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       return response.data;
     } catch (error: any) {
+      // Clear any existing tokens on error
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      setIsAuthenticated(false);
+      setUser(null);
+      
       if (error?.response) {
         console.error("Login error details:", {
           status: error.response?.status,

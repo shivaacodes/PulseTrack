@@ -1,10 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Custom Variant for Dark Mode */
 @custom-variant dark (&:is(.dark *));
 
-/* Theme Inline for Color Aliases */
 @theme inline {
   --font-sans: var(--font-poppins), sans-serif;
   --font-mono: "Menlo", "Monaco", monospace;
