@@ -38,7 +38,7 @@ const getThemeColor = (theme: ThemeColor) => {
 };
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [currentTheme, setCurrentTheme] = useState<ThemeColor>('green');
+  const [currentTheme, setCurrentTheme] = useState<ThemeColor>('red');
 
   useEffect(() => {
     const handleThemeChange = (event: CustomEvent<ThemeColor>) => {

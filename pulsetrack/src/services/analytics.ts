@@ -32,7 +32,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -45,7 +45,7 @@ export const analyticsService = {
         days
       }
     });
-    return response.data;
+    return response.data as AnalyticsOverview;
   },
 
   async getPagePerformance(siteId: string, days: number = 30): Promise<PagePerformance[]> {
@@ -55,7 +55,7 @@ export const analyticsService = {
         days
       }
     });
-    return response.data;
+    return response.data as PagePerformance[];
   },
 
   async getPageVisits(siteId: string, days: number = 30): Promise<number> {
@@ -65,7 +65,7 @@ export const analyticsService = {
         days
       }
     });
-    return response.data;
+    return response.data as number;
   },
 
   async getClickRate(siteId: string, days: number = 30): Promise<number> {
@@ -75,7 +75,7 @@ export const analyticsService = {
         days
       }
     });
-    return response.data;
+    return response.data as number;
   },
 
   async getBounceRate(siteId: string, days: number = 30): Promise<number> {
@@ -85,7 +85,7 @@ export const analyticsService = {
         days
       }
     });
-    return response.data;
+    return response.data as number;
   },
 
   async getConversionRate(siteId: string, days: number = 30): Promise<number> {
@@ -95,7 +95,7 @@ export const analyticsService = {
         days
       }
     });
-    return response.data;
+    return response.data as number;
   },
 
   async getRetentionRate(siteId: string, days: number = 30): Promise<number> {
@@ -105,6 +105,6 @@ export const analyticsService = {
         days
       }
     });
-    return response.data;
+    return response.data as number;
   }
 }; 

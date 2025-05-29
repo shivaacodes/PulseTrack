@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from src.database import Base
 from datetime import datetime
 
+
 class Session(Base):
     __tablename__ = "sessions"
 
@@ -16,11 +17,12 @@ class Session(Base):
     ip_address = Column(String, nullable=True)
     session_metadata = Column(JSON, nullable=True)
 
-    # Relationships
     user = relationship("User", back_populates="sessions")
     site = relationship("Site", back_populates="sessions")
-    events = relationship("Event", back_populates="session", cascade="all, delete-orphan")
-    pageviews = relationship("PageView", back_populates="session", cascade="all, delete-orphan")
+    events = relationship("Event", back_populates="session",
+                          cascade="all, delete-orphan")
+    pageviews = relationship(
+        "PageView", back_populates="session", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Session {self.id}>"

@@ -3,8 +3,10 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from src.database import Base
 
+# Tracking Websites
+
+
 class Site(Base):
-    """Site model for tracking websites."""
     __tablename__ = "sites"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -12,13 +14,16 @@ class Site(Base):
     domain = Column(String(255), unique=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow,
+                        onupdate=datetime.utcnow)
 
-    # Relationships
     user = relationship("User", back_populates="sites")
-    sessions = relationship("Session", back_populates="site", cascade="all, delete-orphan")
-    events = relationship("Event", back_populates="site", cascade="all, delete-orphan")
-    pageviews = relationship("PageView", back_populates="site", cascade="all, delete-orphan")
+    sessions = relationship(
+        "Session", back_populates="site", cascade="all, delete-orphan")
+    events = relationship("Event", back_populates="site",
+                          cascade="all, delete-orphan")
+    pageviews = relationship(
+        "PageView", back_populates="site", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Site {self.domain}>"

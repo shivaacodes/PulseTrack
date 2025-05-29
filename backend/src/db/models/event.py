@@ -3,8 +3,10 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from src.database import Base
 
+# Track User Interactions
+
+
 class Event(Base):
-    """Event model for tracking user interactions."""
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -14,9 +16,8 @@ class Event(Base):
     properties = Column(JSON)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     session = relationship("Session", back_populates="events")
     site = relationship("Site", back_populates="events")
 
     def __repr__(self):
-        return f"<Event {self.name}>" 
+        return f"<Event {self.name}>"
