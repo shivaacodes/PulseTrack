@@ -33,15 +33,15 @@ export default function AnalyticsChart() {
   }, [user]);
 
   if (loading) {
-    return <div className="h-[500px]"><Loader /></div>;
+    return <div className="h-[600px]"><Loader /></div>;
   }
 
   if (error) {
-    return <div className="h-[500px] flex items-center justify-center text-red-500">{error}</div>;
+    return <div className="h-[600px] flex items-center justify-center text-red-500">{error}</div>;
   }
 
   if (!data) {
-    return <div className="h-[500px] flex items-center justify-center">No data available</div>;
+    return <div className="h-[600px] flex items-center justify-center">No data available</div>;
   }
 
   // Calculate click rate (clicks per pageview)
@@ -59,7 +59,7 @@ export default function AnalyticsChart() {
   ];
 
   return (
-    <div className="h-[500px] w-full">
+    <div className="h-[600px] w-full">
       <h3 className="text-base font-semibold mb-4">Analytics Overview</h3>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>

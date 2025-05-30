@@ -115,7 +115,7 @@ const PageVisitsChart: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="h-[500px]">
+      <div className="h-[600px]">
         <Loader />
       </div>
     );
@@ -123,7 +123,7 @@ const PageVisitsChart: React.FC = () => {
 
   if (error) {
     return (
-      <div className="h-[500px] flex items-center justify-center text-red-500">
+      <div className="h-[600px] flex items-center justify-center text-red-500">
         {error}
       </div>
     );
@@ -131,14 +131,14 @@ const PageVisitsChart: React.FC = () => {
 
   if (!data.length) {
     return (
-      <div className="h-[500px] flex items-center justify-center">
+      <div className="h-[600px] flex items-center justify-center">
         No page visit data available
       </div>
     );
   }
 
   return (
-    <div className="h-[500px] w-full">
+    <div className="h-[600px] w-full">
       <h3 className="text-base font-semibold mb-4">Page Visits Over Time</h3>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart

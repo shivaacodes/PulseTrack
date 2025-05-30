@@ -113,12 +113,12 @@ export default function ClickRateChart() {
   }, [user]);
 
   if (loading) {
-    return <div className="h-[500px]"><Loader /></div>;
+    return <div className="h-[600px]"><Loader /></div>;
   }
 
   if (error) {
     return (
-      <div className="h-[500px] flex flex-col items-center justify-center text-red-500">
+      <div className="h-[600px] flex flex-col items-center justify-center text-red-500">
         <div>{error}</div>
         <button 
           onClick={() => window.location.reload()} 
@@ -131,11 +131,11 @@ export default function ClickRateChart() {
   }
 
   if (!data.length) {
-    return <div className="h-[500px] flex items-center justify-center">No click data available</div>;
+    return <div className="h-[600px] flex items-center justify-center">No click data available</div>;
   }
 
   return (
-    <div className="h-[500px] w-full">
+    <div className="h-[600px] w-full">
       <h3 className="text-base font-semibold mb-4">Clicks Over Time</h3>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>

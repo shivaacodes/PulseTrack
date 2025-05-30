@@ -156,7 +156,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       formData.append("email", email);
       formData.append("password", password);
 
-      const response = await api.post<AuthResponse>("/api/v1/auth/login", formData.toString(), {
+      const response = await api.post<AuthResponse>("/api/v1/auth/login", formData, {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },

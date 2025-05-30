@@ -73,11 +73,11 @@ const BounceRateChart: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div className="h-[500px]"><Loader /></div>;
+    return <div className="h-[600px]"><Loader /></div>;
   }
 
   return (
-    <div className="h-[500px] w-full">
+    <div className="h-[600px] w-full">
       <h3 className="text-base font-semibold mb-4">Bounce Rate Over Time</h3>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart

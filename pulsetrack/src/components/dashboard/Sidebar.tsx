@@ -82,7 +82,7 @@ export default function DashboardSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent className="py-10">
-        <SidebarMenu className="space-y-12 px-6">
+        <SidebarMenu className="space-y-16 px-6">
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.name}>
               <TooltipProvider delayDuration={300}>

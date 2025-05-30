@@ -126,7 +126,7 @@
   --chart-4: #4b5563;
   --chart-5: #374151;
 
-  --sidebar-background: #111111;
+  --sidebar-background: #000000;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #ffffff;
   --sidebar-primary-foreground: #000000;
@@ -134,7 +134,7 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #374151;
   --sidebar-ring: #ffffff;
-  --sidebar: #111111;
+  --sidebar: #000000;
 }
 
 /* Base Layer */
