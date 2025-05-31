@@ -1,5 +1,3 @@
-# JWT authentication logic
-
 from datetime import datetime, timedelta
 from typing import Tuple
 from jose import JWTError, jwt
@@ -9,7 +7,6 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..db.models.user import User
-from .config import settings
 import os
 from dotenv import load_dotenv
 

@@ -4,7 +4,6 @@ from redis import Redis, ConnectionPool
 from redis.exceptions import RedisError
 import logging
 from functools import wraps
-import time
 from .config import get_redis_config, settings
 
 logger = logging.getLogger(__name__)
