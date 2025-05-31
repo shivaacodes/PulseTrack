@@ -8,12 +8,10 @@ import asyncio
 
 from .manager import manager
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
 
 @router.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
