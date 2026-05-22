@@ -1,0 +1,13 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    volumes:
+      # Map a local folder to the container's data folder to persist SQLite across restarts
+      - ./docker-data:/app/data
+    restart: unless-stopped
