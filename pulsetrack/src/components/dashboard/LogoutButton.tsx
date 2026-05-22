@@ -1,20 +1,15 @@
 'use client';
 
 import { LogOut } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 export default function LogoutButton() {
-  const { logout } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
 
   const handleLogout = () => {
-    logout();
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out of your account.",
+    toast('Exited Demo Access', {
+      description: "Returning to the landing page.",
     });
     router.push('/');
   };
@@ -22,9 +17,9 @@ export default function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="flex items-center gap-2 px-2 md:px-3 py-1.5 md:py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
+      className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white transition-colors rounded-none font-bold font-mono text-[10px] uppercase border-0 cursor-pointer"
     >
-      <LogOut className="h-4 w-4 md:h-5 md:w-5" />
+      <LogOut className="h-3 w-3" />
       <span className="hidden md:inline">Logout</span>
     </button>
   );

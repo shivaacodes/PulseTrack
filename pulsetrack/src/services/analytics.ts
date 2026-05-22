@@ -1,110 +1,29 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000/api/v1';
-
-export interface AnalyticsOverview {
-  total_pageviews: number;
-  unique_users: number;
-  total_events: number;
-  average_session_duration: number;
-  period_days: number;
-  start_date: string;
-  end_date: string;
-  click_rate: number;
+export interface Site {
+  id: number;
+  name: string;
+  domain: string;
+  created_at: string;
 }
-
-export interface PagePerformance {
-  date: string;
-  pageviews: number;
-  clicks: number;
-  bounce_rate: number;
-}
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true,
-});
-
-// Add request interceptor to add auth token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 export const analyticsService = {
-  async getOverview(siteId: string, days: number = 30): Promise<AnalyticsOverview> {
-    const response = await api.get('/analytics/overview', {
-      params: {
-        site_id: siteId,
-        days
-      }
-    });
-    return response.data as AnalyticsOverview;
+  getSites: async (): Promise<Site[]> => {
+    const res = await fetch('/api/sites');
+    if (!res.ok) throw new Error('Failed to fetch sites');
+    return res.json();
   },
 
-  async getPagePerformance(siteId: string, days: number = 30): Promise<PagePerformance[]> {
-    const response = await api.get('/analytics/pages', {
-      params: {
-        site_id: siteId,
-        days
-      }
+  createSite: async (name: string, domain: string): Promise<Site> => {
+    const res = await fetch('/api/sites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, domain })
     });
-    return response.data as PagePerformance[];
-  },
-
-  async getPageVisits(siteId: string, days: number = 30): Promise<number> {
-    const response = await api.get('/analytics/page-visits', {
-      params: {
-        site_id: siteId,
-        days
-      }
-    });
-    return response.data as number;
-  },
-
-  async getClickRate(siteId: string, days: number = 30): Promise<number> {
-    const response = await api.get('/analytics/click-rate', {
-      params: {
-        site_id: siteId,
-        days
-      }
-    });
-    return response.data as number;
-  },
-
-  async getBounceRate(siteId: string, days: number = 30): Promise<number> {
-    const response = await api.get('/analytics/bounce-rate', {
-      params: {
-        site_id: siteId,
-        days
-      }
-    });
-    return response.data as number;
-  },
-
-  async getConversionRate(siteId: string, days: number = 30): Promise<number> {
-    const response = await api.get('/analytics/conversion-rate', {
-      params: {
-        site_id: siteId,
-        days
-      }
-    });
-    return response.data as number;
-  },
-
-  async getRetentionRate(siteId: string, days: number = 30): Promise<number> {
-    const response = await api.get('/analytics/retention-rate', {
-      params: {
-        site_id: siteId,
-        days
-      }
-    });
-    return response.data as number;
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to create site');
+    }
+    
+    return res.json();
   }
-}; 
+};
