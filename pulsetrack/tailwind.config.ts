@@ -18,6 +18,7 @@ export default {
     extend: {
       fontFamily: {
         poppins: ["var(--font-poppins)", "sans-serif"],
+        oswald: ["var(--font-oswald)", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

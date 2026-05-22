@@ -1,28 +1,59 @@
+// Polyfill/stub global.localStorage on the server to prevent crash on Node.js v25+
+if (typeof globalThis !== 'undefined' && typeof window === 'undefined') {
+  const safeStorage = {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {},
+    clear: () => {},
+    length: 0,
+    key: () => null,
+  };
+  try {
+    Object.defineProperty(globalThis, 'localStorage', {
+      value: safeStorage,
+      writable: true,
+      configurable: true,
+    });
+  } catch (e) {
+    // Ignore
+  }
+}
+
 import type { Metadata, Viewport } from "next";
-import { Poppins } from "next/font/google";
-import { ThemeProvider as NextThemeProvider } from "next-themes";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import { Providers } from "@/providers";
+import { DM_Sans, JetBrains_Mono, Oswald } from "next/font/google";
+import ClientProviders from "./ClientProviders";
 import "./globals.css";
 
-const poppins = Poppins({
-  weight: ["400", "500", "600", "700"],
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-poppins",
+  variable: "--font-dm-sans",
   display: "swap",
-  preload: true,
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const oswald = Oswald({
+  subsets: ["latin"],
+  variable: "--font-oswald",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "PulseTrack",
-    template: "%s | PulseTrack",
+    default: "Apex Insights",
+    template: "%s | Apex Insights",
   },
-  description: "A modern analytics platform for tracking and visualizing your website's performance.",
-  keywords: ["analytics", "dashboard", "tracking", "performance", "metrics"],
-  authors: [{ name: "Shiva Sajay" }],
-  creator: "PulseTrack",
+  description: "Monitor and optimize your web performance in real time with Apex Insights - a premium developer performance dashboard.",
+  keywords: ["analytics", "dashboard", "tracking", "performance", "metrics", "monitoring", "real-time"],
+  authors: [{ name: "Apex Analytics" }],
+  creator: "Apex Analytics",
 };
 
 export const viewport: Viewport = {
@@ -44,23 +75,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${poppins.variable} antialiased bg-background text-foreground min-h-screen`}
+        className={`${dmSans.variable} ${jetbrainsMono.variable} ${oswald.variable} antialiased bg-background text-foreground min-h-screen`}
       >
-        <NextThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem={true}
-          disableTransitionOnChange
-          storageKey="pulsetrack-theme"
-        >
-          <ThemeProvider>
-            <AuthProvider>
-              <Providers>
-                {children}
-              </Providers>
-            </AuthProvider>
-          </ThemeProvider>
-        </NextThemeProvider>
+        <ClientProviders>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );
