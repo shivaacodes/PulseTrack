@@ -21,20 +21,7 @@ export const useTheme = () => {
 };
 
 const getThemeColor = (theme: ThemeColor) => {
-  switch (theme) {
-    case 'green':
-      return '#22c55e';
-    case 'red':
-      return '#ef4444';
-    case 'yellow':
-      return '#eab308';
-    case 'blue':
-      return '#3b82f6';
-    case 'orange':
-      return '#f97316';
-    default:
-      return '#22c55e';
-  }
+  return 'var(--primary)';
 };
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
