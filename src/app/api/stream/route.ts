@@ -4,6 +4,16 @@ import { liveEventEmitter } from '../track/route';
 // Mark this route as dynamic so it doesn't get statically compiled
 export const dynamic = 'force-dynamic';
 
+/**
+ * Server-Sent Events (SSE) Stream Endpoint
+ * 
+ * Architectural Decision:
+ * We use SSE instead of WebSockets for the Live Pulse dashboard because our 
+ * data flow is strictly unidirectional (Server -> Client) for live tracking events.
+ * SSE leverages standard HTTP, which works seamlessly through corporate firewalls,
+ * proxies, and standard load balancers without requiring protocol upgrades (HTTP/1.1 -> WS).
+ * It also natively supports automatic reconnection in the browser.
+ */
 export async function GET(req: NextRequest) {
   // Extract site_id from URL query params
   const { searchParams } = new URL(req.url);

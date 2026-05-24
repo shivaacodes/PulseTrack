@@ -4,10 +4,20 @@ import path from 'path';
 // Define the database path (use a local file in the project root or from env)
 const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'local.db');
 
-// Initialize the database connection
+/**
+ * Initialize the database connection.
+ * Note: better-sqlite3 is fully synchronous. Since Node.js is single-threaded,
+ * this actually provides incredible performance for local reads/writes without
+ * the overhead of connection pooling or async serialization.
+ */
 const db = new Database(dbPath, { verbose: console.log });
 
-// Enable Write-Ahead Logging for better performance
+/**
+ * Enable Write-Ahead Logging (WAL) mode.
+ * Architectural Decision: WAL mode allows concurrent readers and writers, 
+ * which is absolutely critical for our telemetry ingestion pipeline to prevent 
+ * database locking during high-throughput tracking events.
+ */
 db.pragma('journal_mode = WAL');
 
 // Initialize the schema
