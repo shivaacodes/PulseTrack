@@ -4,6 +4,8 @@ Apex Insights is a high-performance, real-time analytics and telemetry tracking 
 
 ## Core Architecture
 
+![Apex Insights Architecture Diagram](./public/apex-insights-architecture-diagram.png)
+
 - **Zero-Cost Infrastructure**: Utilizes a local file-based `better-sqlite3` database (`local.db`) for tracking sites and events. Eliminates cloud dependencies, complex setup, and database hosting fees.
 - **Real-Time Telemetry (SSE)**: The dashboard consumes a native Next.js Server-Sent Events stream (`/api/stream`) to render incoming traffic and user interactions with zero latency.
 - **Drop-In Tracker**: A lightweight, zero-dependency `tracker.js` script allows immediate ingestion of pageviews, clicks, scroll events, and true Core Web Vitals (LCP, FID, TTFB) from any target site.
